@@ -14,7 +14,7 @@ class HealthAgenda {
         this.setupEventListeners();
         this.checkUpcomingAppointments();
         this.updateStats();
-        this.updateProgressBar(); // Nova função para a barra de progresso
+        this.updateProgressBar();
     }
 
     // Configurar data mínima para hoje (PERMITIR MESMO DIA)
@@ -23,22 +23,62 @@ class HealthAgenda {
         const todayFormatted = today.toISOString().split('T')[0];
         document.getElementById('appointment-date').min = todayFormatted;
         
-        // Configurar hora mínima para o horário atual se for hoje
-        const now = new Date();
-        const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
-                           now.getMinutes().toString().padStart(2, '0');
-        
-        // Se o usuário selecionar hoje como data, atualizar hora mínima
+        // Listener para atualizar hora mínima dinamicamente E ADICIONAR 1 DIA
         document.getElementById('appointment-date').addEventListener('change', (e) => {
-            const selectedDate = new Date(e.target.value);
+            const selectedDate = e.target.value; // Formato: YYYY-MM-DD
             const today = new Date();
+            const todayFormatted = today.toISOString().split('T')[0];
             
-            if (selectedDate.toDateString() === today.toDateString()) {
+            if (selectedDate === todayFormatted) {
+                // Se for hoje, definir hora mínima como hora atual
+                const now = new Date();
+                const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                                   now.getMinutes().toString().padStart(2, '0');
                 document.getElementById('appointment-time').min = currentTime;
             } else {
+                // Se for data futura, permitir qualquer horário
                 document.getElementById('appointment-time').min = '00:00';
             }
+            
+            // ADICIONAR 1 DIA APÓS O INPUT DO USUÁRIO
+            this.addOneDayAfterInput(selectedDate);
         });
+    }
+
+    // NOVO MÉTODO: Adicionar 1 dia após o input do usuário
+    addOneDayAfterInput(selectedDate) {
+        if (!selectedDate) return;
+        
+        // Converter a data selecionada para objeto Date
+        const date = new Date(selectedDate);
+        
+        // Adicionar 1 dia
+        date.setDate(date.getDate() + 1);
+        
+        // Formatar a nova data para YYYY-MM-DD
+        const nextDay = date.toISOString().split('T')[0];
+        
+        // Preencher automaticamente o campo com a data do próximo dia
+        document.getElementById('appointment-date').value = nextDay;
+        
+        // Mostrar notificação informando sobre a alteração
+        this.showNotification(
+            `Data ajustada para: ${this.formatDate(nextDay)}`, 
+            'info'
+        );
+        
+        // Atualizar também a validação de hora para a nova data
+        const today = new Date();
+        const todayFormatted = today.toISOString().split('T')[0];
+        
+        if (nextDay === todayFormatted) {
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                               now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('appointment-time').min = currentTime;
+        } else {
+            document.getElementById('appointment-time').min = '00:00';
+        }
     }
 
     // Configurar event listeners
@@ -71,6 +111,17 @@ class HealthAgenda {
         // Confirmação de exclusão
         document.getElementById('confirm-delete').addEventListener('click', () => {
             this.deleteAppointment(this.editingId);
+        });
+
+        // NOVO: Adicionar 1 dia também no evento de input (em tempo real)
+        document.getElementById('appointment-date').addEventListener('input', (e) => {
+            const selectedDate = e.target.value;
+            if (selectedDate) {
+                // Pequeno delay para garantir que o valor foi completamente inserido
+                setTimeout(() => {
+                    this.addOneDayAfterInput(selectedDate);
+                }, 500);
+            }
         });
     }
 
