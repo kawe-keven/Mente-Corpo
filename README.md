@@ -1,7 +1,7 @@
 # Health Tech - Sistema de Gestão de Saúde Pessoal
 <div align="center">
 
-<img src="Mente-Corpo/mvp/imagens/logo.svg" alt="Health Tech Logo" width="120" height="120">
+<img src="https://github.com/user-attachments/assets/435e38e3-d054-455d-9786-33c4fe1a39e3" alt="Health Tech Logo" width="120" height="120">
 
 # Health Tech
 
