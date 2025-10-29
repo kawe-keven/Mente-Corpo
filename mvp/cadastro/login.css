@@ -330,3 +330,84 @@ input:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
+/* ===== MODO ESCURO ===== */
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --shadow-dark: #0d0d0d;
+    --shadow-light: #262626;
+    --dark-color: #e0e0e0;
+    --light-color: #2a2a2a;
+    --secondary-color: #a0a0a0;
+}
+
+/* Botão de Toggle do Modo Escuro */
+.theme-toggle {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 5px 5px 10px var(--shadow-dark), 
+                -5px -5px 10px var(--shadow-light);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.theme-toggle:hover {
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    transform: translateY(2px);
+}
+
+.theme-toggle i {
+    font-size: 1.2rem;
+    color: var(--dark-color);
+    transition: all 0.3s ease;
+}
+
+/* Ajustes específicos para modo escuro */
+[data-theme="dark"] .neo-card {
+    background: var(--bg-color);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] textarea {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .alert {
+    background: var(--light-color);
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background: var(--bg-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Transição suave para a mudança de tema */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.neo-card {
+    transition: all 0.3s ease;
+}

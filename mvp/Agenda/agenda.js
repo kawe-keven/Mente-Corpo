@@ -653,7 +653,27 @@ class HealthAgenda {
     }
 }
 
+// Integração com o tema escuro
+function setupThemeIntegration() {
+    // Verificar se há um tema salvo e aplicar
+    const savedTheme = localStorage.getItem('healthTechTheme');
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    // Escutar mudanças de tema
+    window.addEventListener('themeChanged', (event) => {
+        // Recriar a barra de progresso para aplicar novas cores
+        if (window.agenda) {
+            setTimeout(() => {
+                window.agenda.updateProgressBar();
+            }, 100);
+        }
+    });
+}
+
 // Inicializar a agenda quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
     window.agenda = new HealthAgenda();
+    setupThemeIntegration();
 });

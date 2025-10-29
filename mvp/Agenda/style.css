@@ -612,3 +612,159 @@ html {
         font-size: 0.8rem;
     }
 }
+
+/* ===== MODO ESCURO ===== */
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --shadow-dark: #0d0d0d;
+    --shadow-light: #262626;
+    --dark-color: #e0e0e0;
+    --light-color: #2a2a2a;
+    --secondary-color: #a0a0a0;
+    --primary-color: #4dabf7;
+    --success-color: #51cf66;
+    --warning-color: #ffd43b;
+    --info-color: #3bc9db;
+    --danger-color: #ff6b6b;
+}
+
+[data-theme="dark"] body {
+    background-color: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .neo-card {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .neo-input,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] textarea {
+    background: var(--bg-color);
+    color: var(--dark-color);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+}
+
+[data-theme="dark"] .neo-input:focus,
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] textarea:focus {
+    color: var(--dark-color);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light),
+                0 0 0 2px var(--primary-color);
+}
+
+[data-theme="dark"] .alert {
+    background: var(--light-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .alert-warning {
+    background: linear-gradient(145deg, #332701, #2a2a2a);
+    color: #ffd43b;
+}
+
+[data-theme="dark"] .alert-success {
+    background: linear-gradient(145deg, #0f2a13, #2a2a2a);
+    color: #51cf66;
+}
+
+[data-theme="dark"] .alert-danger {
+    background: linear-gradient(145deg, #2a0c11, #2a2a2a);
+    color: #ff6b6b;
+}
+
+[data-theme="dark"] .alert-info {
+    background: linear-gradient(145deg, #052c33, #2a2a2a);
+    color: #3bc9db;
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #a0a0a0 !important;
+}
+
+[data-theme="dark"] .form-check-label {
+    color: var(--dark-color);
+}
+
+/* Cards de urgência no modo escuro */
+[data-theme="dark"] .neo-card.urgency-high {
+    background: linear-gradient(145deg, #331a1a, #2a2a2a);
+    border-left: 4px solid #ff6b6b;
+}
+
+[data-theme="dark"] .neo-card.urgency-medium {
+    background: linear-gradient(145deg, #332b01, #2a2a2a);
+    border-left: 4px solid #ffd43b;
+}
+
+[data-theme="dark"] .neo-card.urgency-low {
+    background: linear-gradient(145deg, #052c33, #2a2a2a);
+    border-left: 4px solid #3bc9db;
+}
+
+[data-theme="dark"] .neo-card.completed {
+    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+    border-left: 4px solid #6c757d;
+}
+
+/* Botão de Toggle do Modo Escuro */
+.theme-toggle {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 5px 5px 10px var(--shadow-dark), 
+                -5px -5px 10px var(--shadow-light);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-left: 10px;
+    color: var(--dark-color);
+}
+
+.theme-toggle:hover {
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    transform: translateY(2px);
+}
+
+.theme-toggle i {
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .theme-toggle i {
+    color: #ffd43b;
+}
+
+/* Transição suave para a mudança de tema */
+body, .neo-card, .neo-input, .form-control, .form-select, textarea {
+    transition: all 0.3s ease;
+}

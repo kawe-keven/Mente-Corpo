@@ -51,6 +51,9 @@ body {
     padding: 10px 20px;
     transition: all 0.3s ease;
     color: var(--dark-color);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .neo-button:hover {
@@ -220,4 +223,188 @@ footer {
     background: var(--bg-color);
     box-shadow: 3px 3px 6px var(--shadow-dark), 
                 -3px -3px 6px var(--shadow-light);
+}
+
+/* Navbar Styles */
+.navbar {
+    padding: 15px 0;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+.navbar-toggler {
+    border: none;
+    padding: 8px 12px;
+}
+
+.nav-link {
+    color: var(--dark-color) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--primary-color) !important;
+}
+
+/* Icon Styles */
+.icon-large {
+    font-size: 2.5rem;
+}
+
+.icon-medium {
+    font-size: 1.5rem;
+}
+
+/* Dropdown Styles */
+.dropdown-menu {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 10px 10px 20px var(--shadow-dark), 
+                -10px -10px 20px var(--shadow-light);
+}
+
+.dropdown-item {
+    color: var(--dark-color);
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-color);
+    color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .icon-large {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===== MODO ESCURO ===== */
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --shadow-dark: #0d0d0d;
+    --shadow-light: #262626;
+    --dark-color: #e0e0e0;
+    --light-color: #2a2a2a;
+    --secondary-color: #a0a0a0;
+    --primary-color: #4d8cff;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+}
+
+[data-theme="dark"] body {
+    background-color: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .neo-card {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .habit-card.completed {
+    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+}
+
+[data-theme="dark"] .alert {
+    background: var(--light-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .alert-info {
+    background: linear-gradient(145deg, #052c33, #2a2a2a);
+    color: #3bc9db;
+    border-left: 4px solid #17a2b8;
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background: var(--bg-color);
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #a0a0a0 !important;
+}
+
+[data-theme="dark"] .form-check-label {
+    color: var(--dark-color);
+}
+
+[data-theme="dark"] .habit-details {
+    color: var(--secondary-color);
+}
+
+[data-theme="dark"] .neo-card-inset {
+    background: var(--bg-color);
+    box-shadow: inset 5px 5px 10px var(--shadow-dark), 
+                inset -5px -5px 10px var(--shadow-light);
+}
+
+/* Botão de Toggle do Modo Escuro */
+.theme-toggle {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 5px 5px 10px var(--shadow-dark), 
+                -5px -5px 10px var(--shadow-light);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-left: 10px;
+    color: var(--dark-color);
+}
+
+.theme-toggle:hover {
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    transform: translateY(2px);
+}
+
+.theme-toggle i {
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .theme-toggle i {
+    color: #ffd43b;
+}
+
+/* Transição suave para a mudança de tema */
+body, .neo-card, .neo-input, .form-control, .form-select, textarea {
+    transition: all 0.3s ease;
 }
