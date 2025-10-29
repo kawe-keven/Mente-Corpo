@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tech - Login</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg neo-card mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/mvp/inicio/inicio.html">
+                <img src="/mvp/imagens/logo.svg" class="taskbar-icon" style="height: 30px;"> Health Tech
+            </a>
+            
+            <button class="navbar-toggler neo-button" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="bi bi-list"></i>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/mvp/inicio/inicio.html">
+                            <i class="bi bi-house me-1"></i>Início
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/mvp/HabitosSaudaveis/index.html">
+                            <i class="bi bi-check-circle me-1"></i>Meus Hábitos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/mvp/Agenda/agenda.html">
+                            <i class="bi bi-calendar-check me-1"></i>Agenda de Saúde
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/mvp/Chat/chat.html">
+                            <i class="bi bi-chat me-1"></i>Espaço Seguro
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="navbar-nav">
+                    <!-- Botão de Modo Noturno -->
+                    <button class="theme-toggle" id="theme-toggle" title="Alternar modo escuro/claro">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                    
+                    <div class="nav-item">
+                        <a class="nav-link" href="/mvp/cadastro/cadastro.html">
+                            <i class="bi bi-person-plus me-1"></i>Cadastrar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <!-- Card de Login -->
+                <div class="neo-card p-4 mb-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-circle display-4 text-primary mb-3"></i>
+                        <h1 class="h3 fw-bold text-primary">Login</h1>
+                        <p class="text-muted">Entre na sua conta Health Tech</p>
+                    </div>
+
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">E-mail</label>
+                            <input type="email" class="form-control neo-input" id="loginEmail" required>
+                            <div class="invalid-feedback">Por favor, insira um e-mail válido.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="loginSenha" class="form-label">Senha</label>
+                            <input type="password" class="form-control neo-input" id="loginSenha" required>
+                            <div class="invalid-feedback">Por favor, insira sua senha.</div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="lembrar">
+                            <label class="form-check-label small" for="lembrar">Lembrar de mim</label>
+                        </div>
+
+                        <button type="submit" class="neo-button neo-button-primary w-100 mb-3">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                        </button>
+
+                        <div class="text-center">
+                            <a href="#" class="small text-primary text-decoration-none">Esqueci minha senha</a>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <p class="small text-muted">
+                                Não tem uma conta? 
+                                <a href="/mvp/cadastro/cadastro.html" class="text-primary text-decoration-none">Cadastre-se</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+
+    <!-- Footer -->
+    <footer class="neo-card mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Health Tech</h6>
+                    <p class="small text-muted mb-0">
+                        Sua jornada para uma vida mais saudável começa aqui. 
+                        Acompanhe, evolua e comemore cada conquista.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="small text-muted mb-0">
+                        &copy; 2025 Health Tech. Todos os direitos reservados.
+                    </p>
+                    <div class="mt-2">
+                        <a href="#" class="text-muted me-3 small">Termos de Uso</a>
+                        <a href="#" class="text-muted me-3 small">Privacidade</a>
+                        <a href="#" class="text-muted small">Ajuda</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="login.js"></script>
+    <script src="/mvp/tema/theme.js"></script>
+</body>
+</html>
