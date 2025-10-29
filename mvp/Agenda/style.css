@@ -116,19 +116,6 @@ body {
     box-shadow: 2px 2px 5px rgba(0, 123, 255, 0.3);
 }
 
-.week-progress {
-    height: 10px;
-    border-radius: 5px;
-    background: var(--bg-color);
-    box-shadow: inset 2px 2px 4px var(--shadow-dark), 
-                inset -2px -2px 4px var(--shadow-light);
-}
-
-.week-progress .progress-bar {
-    border-radius: 5px;
-    transition: width 0.5s ease;
-}
-
 /* Stat Cards */
 .stat-card {
     text-align: center;
@@ -207,41 +194,6 @@ footer {
     background: var(--bg-color);
     color: var(--primary-color);
 }
-
-/* Habit Progress in Dashboard */
-.habit-progress {
-    height: 6px;
-    border-radius: 3px;
-    margin-top: 5px;
-}
-
-.habit-details {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-}
-
-.tab-content {
-    min-height: 300px;
-}
-
-.input-group-neo {
-    background: var(--bg-color);
-    border-radius: 10px;
-    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
-                inset -3px -3px 6px var(--shadow-light);
-    padding: 5px;
-}
-
-/* Melhorando a aparência dos cards de hábito no resumo */
-#weekly-habits-performance > div {
-    padding: 12px;
-    border-radius: 12px;
-    background: var(--bg-color);
-    box-shadow: 3px 3px 6px var(--shadow-dark), 
-                -3px -3px 6px var(--shadow-light);
-}
-
-/* ===== ESTILOS ESPECÍFICOS DA AGENDA ===== */
 
 /* Inputs no estilo neomórfico */
 .neo-input {
@@ -365,7 +317,7 @@ html {
 }
 
 /* Modal styles */
-.modal-neo .modal-content {
+.modal-content {
     background: var(--bg-color);
     border-radius: 20px;
     box-shadow: 20px 20px 40px var(--shadow-dark), 
@@ -385,44 +337,6 @@ html {
     border-color: var(--primary-color);
 }
 
-/* Quantity controls para hábitos */
-.quantity-input {
-    background: var(--bg-color);
-    border: none;
-    border-radius: 10px;
-    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
-                inset -3px -3px 6px var(--shadow-light);
-    padding: 8px 12px;
-    text-align: center;
-    width: 80px;
-}
-
-.quantity-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-.btn-quantity {
-    background: var(--bg-color);
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 3px 3px 6px var(--shadow-dark), 
-                -3px -3px 6px var(--shadow-light);
-    transition: all 0.2s ease;
-}
-
-.btn-quantity:active {
-    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
-                inset -3px -3px 6px var(--shadow-light);
-}
 /* ===== CORREÇÕES PARA A AGENDA ===== */
 
 /* Cores de urgência para os cards */
@@ -510,54 +424,7 @@ html {
         padding: 15px !important;
     }
 }
-/* ===== BARRA DE PROGRESSO PARA PRÓXIMO AGENDAMENTO ===== */
 
-#progress-bar-container {
-    margin-bottom: 2rem;
-}
-
-.progress-bar {
-    height: 20px;
-    border-radius: 10px;
-    background: var(--bg-color);
-    box-shadow: inset 5px 5px 10px var(--shadow-dark), 
-                inset -5px -5px 10px var(--shadow-light);
-    overflow: hidden;
-    margin-bottom: 10px;
-}
-
-.progress-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.5s ease, background 0.5s ease;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-/* Animações para a barra de progresso */
-.progress-fill {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.8; }
-    100% { opacity: 1; }
-}
-
-/* Responsividade para a barra de progresso */
-@media (max-width: 768px) {
-    .progress-bar {
-        height: 15px;
-    }
-    
-    #progress-text {
-        font-size: 0.8rem;
-    }
-    
-    #progress-days {
-        font-size: 0.7rem;
-    }
-}
 /* ===== BARRA DE PROGRESSO ÚNICA ===== */
 
 #progress-container {
