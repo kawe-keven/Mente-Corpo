@@ -14,11 +14,13 @@
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
 
 </div>
-## 📋 Sobre o Projeto
 
-O **Health Tech** é uma aplicação web moderna desenvolvida para ajudar usuários a gerenciarem sua saúde de forma integrada. Com interface neomórfica e design responsivo, oferece recursos completos para acompanhamento de hábitos saudáveis, agendamento de consultas médicas e um espaço seguro para anotações pessoais.
+# 📋 Sobre o Projeto
 
-### 🎯 Objetivos
+O **Health Tech** é uma aplicação web moderna desenvolvida para ajudar usuários a gerenciarem sua saúde de forma integrada. Com interface neomórfica e design responsivo, oferece recursos completos para acompanhamento de hábitos saudáveis, agendamento de consultas médicas e um espaço seguro para troca de conhecimentos entre pessoas.
+
+### 
+# 🎯 Objetivos
 - ✅ Centralizar informações de saúde
 - ✅ Facilitar o agendamento de consultas
 - ✅ Promover hábitos saudáveis
