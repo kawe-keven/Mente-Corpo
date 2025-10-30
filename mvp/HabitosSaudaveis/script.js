@@ -1,4 +1,4 @@
-// Dados dos hábitos com metas, unidades e cores
+// Dados dois hábitos com metas, unidades e cores
 const habits = [
     { 
         id: 1, 
@@ -250,15 +250,23 @@ function getHabitCurrentQuantity(habitId) {
     return 0;
 }
 
-// Calcular pontos baseado na quantidade
+// Calcular pontos baseado na quantidade - CORRIGIDO
 function calculatePointsFromQuantity(habit, quantity) {
     if (habit.type === "boolean") {
         return quantity >= habit.goal ? habit.points : 0;
     }
-    return Math.min(habit.points, quantity * habit.pointsPerUnit);
+    
+    // Garantir que os pontos sejam calculados corretamente
+    let calculatedPoints = quantity * habit.pointsPerUnit;
+    
+    // Não pode exceder os pontos máximos do hábito
+    calculatedPoints = Math.min(calculatedPoints, habit.points);
+    
+    // Arredondar para evitar decimais muito pequenos
+    return Math.round(calculatedPoints * 100) / 100;
 }
 
-// Atualizar quantidade do hábito - COM LIMITES
+// Atualizar quantidade do hábito - CORRIGIDO
 function updateHabitQuantity(habitId, change, directValue = null) {
     const habit = habits.find(h => h.id === habitId);
     const today = new Date().toDateString();
@@ -271,16 +279,17 @@ function updateHabitQuantity(habitId, change, directValue = null) {
     // Obter valor atual
     let currentValue = getHabitCurrentQuantity(habitId);
     
+    // Calcular pontos ANTES da mudança
+    const pointsBefore = calculatePointsFromQuantity(habit, currentValue);
+    
     // Atualizar valor
     if (directValue !== null) {
-        // Para entrada direta, arredondar para o múltiplo mais próximo do incremento
         let newValue = parseInt(directValue) || 0;
         if (habit.increment > 1) {
             newValue = Math.round(newValue / habit.increment) * habit.increment;
         }
         currentValue = Math.max(0, newValue);
     } else {
-        // Para incremento/decremento, usar o valor do incremento específico
         const incrementValue = change * habit.increment;
         currentValue = Math.max(0, currentValue + incrementValue);
     }
@@ -316,10 +325,12 @@ function updateHabitQuantity(habitId, change, directValue = null) {
     // Salvar novo valor
     userData.currentWeekData.habitQuantities[today][habitId] = currentValue;
     
-    // Calcular pontos anteriores
-    const previousPoints = calculatePointsFromQuantity(habit, currentValue - (change * habit.increment));
-    const newPoints = calculatePointsFromQuantity(habit, currentValue);
-    const pointsDifference = newPoints - previousPoints;
+    // Calcular pontos DEPOIS da mudança
+    const pointsAfter = calculatePointsFromQuantity(habit, currentValue);
+    const pointsDifference = pointsAfter - pointsBefore;
+    
+    // DEBUG: Mostrar no console o que está acontecendo
+    console.log(`Hábito: ${habit.name}, Antes: ${pointsBefore}, Depois: ${pointsAfter}, Diferença: ${pointsDifference}`);
     
     // Atualizar pontos totais
     userData.points += pointsDifference;
@@ -718,8 +729,9 @@ function updateHistory() {
     historyContainer.innerHTML = html;
 }
 
-// Salvar dados no localStorage
+// Salvar dados no localStorage - COM DEBUG
 function saveData() {
+    console.log('Salvando dados:', userData.points, 'pontos totais');
     localStorage.setItem('healthyHabitsData', JSON.stringify(userData));
 }
 
