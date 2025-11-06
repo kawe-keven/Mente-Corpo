@@ -40,6 +40,7 @@ async function initDb() {
       details TEXT,
       start DATETIME,
       end DATETIME,
+      completed INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
@@ -52,6 +53,18 @@ async function initDb() {
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
+
+  // Migration: ensure 'completed' column exists on existing databases
+  try {
+    const cols = await db.all("PRAGMA table_info('events')");
+    const hasCompleted = cols.some(c => c.name === 'completed');
+    if (!hasCompleted) {
+      await db.run("ALTER TABLE events ADD COLUMN completed INTEGER DEFAULT 0");
+      console.log('Migration: added events.completed column');
+    }
+  } catch (err) {
+    console.warn('Could not run migration for events.completed:', err.message || err);
+  }
 
   return db;
 }

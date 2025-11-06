@@ -154,7 +154,15 @@ class HealthAgenda {
     // Carregar agendamentos do servidor via API
     async loadAppointmentsFromServer() {
         const events = await window.api.fetchWithAuth('/api/agenda');
-        // Mapear eventos do backend para o formato esperado
+        // Preservar flags locais (ex.: completed) quando o usuário estiver usando sincronização com servidor.
+        // Carregamos o armazenamento local e criamos um mapa id -> completed para mesclar com os dados do servidor.
+        const localStored = this.loadAppointments();
+        const localCompletedMap = {};
+        localStored.forEach(item => {
+            if (item && item.id) localCompletedMap[item.id.toString()] = !!item.completed;
+        });
+
+        // Mapear eventos do backend para o formato esperado e mesclar o estado 'completed' vindo do localStorage
         this.appointments = events.map(e => {
             const start = e.start || null;
             let date = '';
@@ -164,6 +172,7 @@ class HealthAgenda {
                 date = d.toISOString().split('T')[0];
                 time = d.toTimeString().split(' ')[0].slice(0,5);
             }
+            const idStr = e.id.toString();
             return {
                 id: e.id.toString(),
                 createdAt: e.created_at || new Date().toISOString(),
@@ -175,7 +184,8 @@ class HealthAgenda {
                 time,
                 notes: e.details || '',
                 reminder: false,
-                completed: false
+                // Preservar completed se houver no localStorage, caso contrário usar false
+                completed: localCompletedMap[idStr] || false
             };
         });
     }
@@ -370,11 +380,42 @@ class HealthAgenda {
     toggleCompleted(id) {
         const appointment = this.appointments.find(a => a.id === id);
         if (appointment) {
+            // Toggle locally first
             appointment.completed = !appointment.completed;
-            this.saveToStorage();
-            this.renderAppointments();
-            this.updateStats();
-            this.updateProgressBar();
+
+            // If API available, persist to server
+            if (window.api && window.api.fetchWithAuth) {
+                window.api.fetchWithAuth(`/api/agenda/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ completed: appointment.completed })
+                }).then(updated => {
+                    // Update local entry with server response (to keep consistency)
+                    const idx = this.appointments.findIndex(a => a.id === updated.id.toString());
+                    if (idx !== -1) this.appointments[idx] = { ...this.appointments[idx], ...{
+                        completed: !!updated.completed,
+                        title: updated.title || this.appointments[idx].title,
+                        details: updated.details || this.appointments[idx].notes,
+                        start: updated.start || this.appointments[idx].date
+                    } };
+                    this.saveToStorage();
+                    this.renderAppointments();
+                    this.updateStats();
+                    this.updateProgressBar();
+                }).catch(err => {
+                    console.error('Erro ao atualizar completed no servidor', err);
+                    // Fallback: keep change locally
+                    this.saveToStorage();
+                    this.renderAppointments();
+                    this.updateStats();
+                    this.updateProgressBar();
+                });
+            } else {
+                // No API: persist locally
+                this.saveToStorage();
+                this.renderAppointments();
+                this.updateStats();
+                this.updateProgressBar();
+            }
         }
     }
 
