@@ -5,8 +5,13 @@ class Login {
     }
 
     init() {
+        // Verificar se já está logado e redirecionar
+        if (this.isUserLoggedIn()) {
+            window.location.href = '/mvp/inicio/inicio.html';
+            return;
+        }
+
         this.setupEventListeners();
-        this.loadExistingUsers();
     }
 
     setupEventListeners() {
@@ -16,8 +21,8 @@ class Login {
         }
     }
 
-    loadExistingUsers() {
-        this.usuarios = JSON.parse(localStorage.getItem('healthTechUsers')) || [];
+    isUserLoggedIn() {
+        return !!localStorage.getItem('authToken');
     }
 
     handleLogin(event) {
@@ -25,7 +30,6 @@ class Login {
         event.stopPropagation();
 
         const form = event.target;
-        
         if (form.checkValidity()) {
             this.validarLogin();
         } else {
@@ -33,29 +37,36 @@ class Login {
         }
     }
 
-    validarLogin() {
+    async validarLogin() {
         const email = document.getElementById('loginEmail').value.toLowerCase();
         const senha = document.getElementById('loginSenha').value;
 
-        const usuario = this.usuarios.find(u => u.email === email && u.senha === senha);
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: senha })
+            });
 
-        if (usuario) {
-            // Atualizar último login
-            usuario.ultimoLogin = new Date().toISOString();
-            localStorage.setItem('healthTechUsers', JSON.stringify(this.usuarios));
-            
-            // Salvar usuário logado
-            localStorage.setItem('currentUser', JSON.stringify(usuario));
+            const data = await res.json();
+            if (!res.ok) {
+                this.mostrarNotificacao(data.error || 'Erro ao fazer login', 'error');
+                document.getElementById('loginSenha').value = '';
+                return;
+            }
+
+            // Salvar token e usuário
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
 
             this.mostrarNotificacao('Login realizado com sucesso! Redirecionando...', 'success');
-            
-            // Redirecionar para a agenda após 1 segundo
+
             setTimeout(() => {
-                window.location.href = '/mvp/Agenda/agenda.html';
-            }, 1000);
-        } else {
-            this.mostrarNotificacao('E-mail ou senha incorretos. Tente novamente.', 'error');
-            document.getElementById('loginSenha').value = '';
+                window.location.href = '/mvp/inicio/inicio.html';
+            }, 800);
+        } catch (err) {
+            console.error(err);
+            this.mostrarNotificacao('Erro de rede. Tente novamente.', 'error');
         }
     }
 
@@ -94,12 +105,4 @@ class Login {
 // Inicializar o login quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
     window.login = new Login();
-});
-
-// Verificar se já existe um usuário logado
-document.addEventListener('DOMContentLoaded', () => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-        window.location.href = '/mvp/Agenda/agenda.html';
-    }
 });

@@ -149,16 +149,111 @@ let userData = JSON.parse(localStorage.getItem('healthyHabitsData')) || {
     }
 };
 
+// Se integrado com backend, exigir autenticação antes de usar a página
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+if (!getAuthToken()) {
+    // Não autenticado -> redirecionar para login
+    window.location.href = '/mvp/login/login.html';
+}
+
 // Inicializar a página
 function init() {
-    renderHabits();
-    updateStats();
-    updateResetCountdown();
-    updateWeeklySummary();
-    updateHistory();
-    
-    // Verificar se precisa resetar (nova semana)
-    checkForReset();
+    // Garantir estrutura mínima de userData para evitar erros ao acessar propriedades
+    ensureUserDataShapes();
+    // Primeiro, tentar sincronizar definições de hábitos com o servidor
+    if (window.api && window.api.fetchWithAuth) {
+        syncHabitsWithServer().then(() => {
+            renderHabits();
+            updateStats();
+            updateResetCountdown();
+            updateWeeklySummary();
+            updateHistory();
+            checkForReset();
+        }).catch(err => {
+            console.warn('Falha ao sincronizar hábitos com servidor, usando dados locais.', err);
+            renderHabits();
+            updateStats();
+            updateResetCountdown();
+            updateWeeklySummary();
+            updateHistory();
+            checkForReset();
+        });
+    } else {
+        renderHabits();
+        updateStats();
+        updateResetCountdown();
+        updateWeeklySummary();
+        updateHistory();
+        checkForReset();
+    }
+}
+
+// Garantir que userData contenha as propriedades necessárias (compatibilidade com versões antigas)
+function ensureUserDataShapes() {
+    if (!userData) userData = {};
+    if (!userData.currentWeekData) userData.currentWeekData = { points: 0, habitsCompleted: {}, days: {}, habitQuantities: {} };
+    if (!userData.history) userData.history = [];
+    if (!userData.completedHabits) userData.completedHabits = [];
+    if (typeof userData.points !== 'number') userData.points = 0;
+    if (typeof userData.totalCompleted !== 'number') userData.totalCompleted = 0;
+    if (typeof userData.weeklyStreak !== 'number') userData.weeklyStreak = 0;
+    // persist normalized shape back to storage so subsequent loads are ok
+    localStorage.setItem('healthyHabitsData', JSON.stringify(userData));
+}
+
+// Sincronizar definições de hábitos com o backend
+async function syncHabitsWithServer() {
+    // Carregar mapeamento localId -> serverId
+    let mapping = JSON.parse(localStorage.getItem('habitServerMap') || '{}');
+
+    // Buscar hábitos do servidor
+    const serverHabits = await window.api.fetchWithAuth('/api/habits');
+
+    if (!serverHabits || serverHabits.length === 0) {
+        // Criar definições padrão no servidor
+        for (const h of habits) {
+            const notes = JSON.stringify({ meta: { localId: h.id }, data: h });
+            try {
+                const created = await window.api.fetchWithAuth('/api/habits', { method: 'POST', body: JSON.stringify({ title: h.name, notes }) });
+                mapping[h.id] = created.id;
+            } catch (err) {
+                console.warn('Erro ao criar hábito no servidor:', err);
+            }
+        }
+    } else {
+        // Mapear e reconstruir hábitos locais a partir do servidor
+        for (const sh of serverHabits) {
+            let parsed = null;
+            try {
+                parsed = JSON.parse(sh.notes || '{}');
+            } catch (e) {
+                parsed = null;
+            }
+            if (parsed && parsed.meta && parsed.meta.localId) {
+                mapping[parsed.meta.localId] = sh.id;
+                // substituir habit definition with server data
+                const idx = habits.findIndex(h => h.id === parsed.meta.localId);
+                if (idx > -1 && parsed.data) {
+                    habits[idx] = parsed.data;
+                }
+            } else {
+                // fallback: try to match by title/name
+                const idx = habits.findIndex(h => h.name === sh.title);
+                if (idx > -1) {
+                    mapping[habits[idx].id] = sh.id;
+                    try {
+                        const parsedNotes = JSON.parse(sh.notes || '{}');
+                        if (parsedNotes.data) habits[idx] = parsedNotes.data;
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    localStorage.setItem('habitServerMap', JSON.stringify(mapping));
 }
 
 // Renderizar os hábitos
@@ -355,6 +450,10 @@ function updateHabitQuantity(habitId, change, directValue = null) {
     
     // Salvar e atualizar interface
     saveData();
+    // Tentar sincronizar progresso do hábito no servidor (opcional)
+    if (window.api && window.api.fetchWithAuth) {
+        syncHabitProgressToServer(habitId).catch(err => console.warn('Erro ao sincronizar progresso do hábito:', err));
+    }
     renderHabits();
     updateStats();
     updateWeeklySummary();
@@ -388,15 +487,53 @@ function toggleBooleanHabit(habitId) {
     userData.currentWeekData.habitQuantities[today][habitId] = isCompleted ? 0 : 1;
     
     saveData();
+    if (window.api && window.api.fetchWithAuth) {
+        syncHabitProgressToServer(habitId).catch(err => console.warn('Erro ao sincronizar progresso do hábito:', err));
+    }
     renderHabits();
     updateStats();
     updateWeeklySummary();
+}
+
+// Envia um snapshot simples do progresso do hábito para o servidor atualizando a coluna notes
+async function syncHabitProgressToServer(habitId) {
+    const mapping = JSON.parse(localStorage.getItem('habitServerMap') || '{}');
+    const serverId = mapping[habitId];
+    if (!serverId) return;
+
+    const today = new Date().toDateString();
+    const currentQuantity = getHabitCurrentQuantity(habitId);
+    const habit = habits.find(h => h.id === habitId);
+
+    const notes = JSON.stringify({
+        meta: { localId: habitId },
+        data: habit,
+        progress: {
+            date: today,
+            currentQuantity,
+            points: calculatePointsFromQuantity(habit, currentQuantity)
+        }
+    });
+
+    await window.api.fetchWithAuth(`/api/habits/${serverId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title: habit.name, notes })
+    });
 }
 
 // Atualizar dados semanais
 function updateWeeklyData(habitId, pointsDifference) {
     const today = new Date().toDateString();
     
+    // Garantir estrutura mínima em currentWeekData
+    if (!userData.currentWeekData || typeof userData.currentWeekData !== 'object') {
+        userData.currentWeekData = { points: 0, habitsCompleted: {}, days: {}, habitQuantities: {} };
+    }
+    if (!userData.currentWeekData.days || typeof userData.currentWeekData.days !== 'object') {
+        userData.currentWeekData.days = {};
+    }
+    if (!userData.currentWeekData.points) userData.currentWeekData.points = 0;
+
     // Inicializar dados do dia se não existirem
     if (!userData.currentWeekData.days[today]) {
         userData.currentWeekData.days[today] = {
@@ -404,7 +541,7 @@ function updateWeeklyData(habitId, pointsDifference) {
             habitsCompleted: []
         };
     }
-    
+
     // Atualizar pontos do dia
     userData.currentWeekData.days[today].points += pointsDifference;
     userData.currentWeekData.points += pointsDifference;
@@ -442,18 +579,42 @@ function updateStats() {
 
 // Atualizar contagem regressiva para reset
 function updateResetCountdown() {
-    const lastReset = new Date(userData.lastReset);
-    const nextReset = new Date(lastReset);
+    // helper: parse dates robustly (accept ISO or toDateString formats). Fallback to today if invalid.
+    function parseDateFlexible(input) {
+        if (!input) return new Date();
+        const d1 = new Date(input);
+        if (!isNaN(d1)) return d1;
+        const t = Date.parse(input);
+        if (!isNaN(t)) return new Date(t);
+        // try to salvage by taking last 3 tokens (e.g. 'Wed Nov 05 2025') -> 'Nov 05 2025'
+        try {
+            const parts = String(input).trim().split(/\s+/);
+            if (parts.length >= 3) {
+                const last3 = parts.slice(-3).join(' ');
+                const d2 = new Date(last3);
+                if (!isNaN(d2)) return d2;
+            }
+        } catch (e) {}
+        return new Date();
+    }
+
+    const lastResetDate = parseDateFlexible(userData.lastReset);
+    const nextReset = new Date(lastResetDate);
     nextReset.setDate(nextReset.getDate() + 7);
-    
+
     const today = new Date();
-    const diffTime = nextReset - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    resetCountdownElement.textContent = `Próximo reset em: ${diffDays} dia${diffDays !== 1 ? 's' : ''}`;
-    
-    if (diffDays <= 1) {
-        resetCountdownElement.parentElement.className = "alert alert-warning d-flex align-items-center";
+    const diffTime = nextReset.getTime() - today.getTime();
+    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (!isFinite(diffDays) || isNaN(diffDays)) diffDays = 0;
+
+    if (resetCountdownElement) {
+        resetCountdownElement.textContent = `Próximo reset em: ${diffDays} dia${diffDays !== 1 ? 's' : ''}`;
+        if (diffDays <= 1) {
+            if (resetCountdownElement.parentElement) resetCountdownElement.parentElement.className = "alert alert-warning d-flex align-items-center";
+        } else {
+            // restore default class if necessary
+            if (resetCountdownElement.parentElement) resetCountdownElement.parentElement.className = "alert alert-info d-flex align-items-center";
+        }
     }
 }
 
@@ -527,12 +688,13 @@ function resetHabits() {
 
 // Atualizar resumo semanal - COM BARRAS DE PROGRESSO COLORIDAS
 function updateWeeklySummary() {
-    // Pontuação da semana
-    document.getElementById('weekly-points').textContent = Math.round(userData.currentWeekData.points);
-    
+    // Pontuação da semana (com fallback caso currentWeekData não exista)
+    const cw = userData.currentWeekData || { points: 0, days: {}, habitQuantities: {} };
+    document.getElementById('weekly-points').textContent = Math.round(cw.points || 0);
+
     // Progresso semanal
     const maxWeeklyPoints = habits.reduce((total, habit) => total + habit.points, 0);
-    const weeklyProgress = maxWeeklyPoints > 0 ? (userData.currentWeekData.points / maxWeeklyPoints) * 100 : 0;
+    const weeklyProgress = maxWeeklyPoints > 0 ? (cw.points / maxWeeklyPoints) * 100 : 0;
     document.getElementById('weekly-progress-bar').style.width = `${weeklyProgress}%`;
     document.getElementById('weekly-progress-text').textContent = `${Math.round(weeklyProgress)}% completo`;
     
@@ -541,8 +703,8 @@ function updateWeeklySummary() {
     performanceContainer.innerHTML = '';
     
     habits.forEach(habit => {
-        const today = new Date().toDateString();
-        const currentQuantity = getHabitCurrentQuantity(habit.id);
+    const today = new Date().toDateString();
+    const currentQuantity = getHabitCurrentQuantity(habit.id);
         const progress = (currentQuantity / habit.goal) * 100;
         const pointsEarned = calculatePointsFromQuantity(habit, currentQuantity);
         
@@ -624,8 +786,9 @@ function updateAchievements() {
 function updateModalSummary() {
     const modalContent = document.getElementById('modal-weekly-content');
     const today = new Date();
-    const weekStart = new Date(userData.weekStart);
-    
+    const weekStart = new Date(userData.weekStart || new Date().toDateString());
+    const cw = userData.currentWeekData || { points: 0, days: {}, habitQuantities: {} };
+
     modalContent.innerHTML = `
         <div class="text-center mb-4">
             <h4>Resumo da Semana</h4>
@@ -635,19 +798,19 @@ function updateModalSummary() {
         <div class="row text-center mb-4">
             <div class="col-4">
                 <div class="neo-card p-3">
-                    <h5>${Math.round(userData.currentWeekData.points)}</h5>
+                    <h5>${Math.round(cw.points || 0)}</h5>
                     <small>Pontos</small>
                 </div>
             </div>
             <div class="col-4">
                 <div class="neo-card p-3">
-                    <h5>${Object.keys(userData.currentWeekData.days).length}</h5>
+                    <h5>${Object.keys(cw.days || {}).length}</h5>
                     <small>Dias Ativos</small>
                 </div>
             </div>
             <div class="col-4">
                 <div class="neo-card p-3">
-                    <h5>${userData.weeklyStreak}</h5>
+                    <h5>${userData.weeklyStreak || 0}</h5>
                     <small>Sequência</small>
                 </div>
             </div>
@@ -667,7 +830,8 @@ function generateDailyProgress() {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateString = date.toDateString();
-        const dayData = userData.currentWeekData.days[dateString];
+        const cw = userData.currentWeekData || { points: 0, days: {} };
+        const dayData = (cw.days || {})[dateString];
         const points = dayData ? Math.round(dayData.points) : 0;
         
         html += `

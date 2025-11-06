@@ -41,7 +41,7 @@ class Cadastro {
     }
 
     loadExistingUsers() {
-        // Carrega usuários existentes do localStorage
+        // Mantemos compatibilidade com dados locais (opcional)
         this.usuarios = JSON.parse(localStorage.getItem('healthTechUsers')) || [];
     }
 
@@ -74,39 +74,41 @@ class Cadastro {
     }
 
     criarUsuario() {
-        const usuario = {
-            id: Date.now().toString(),
-            nome: document.getElementById('nome').value,
-            dataNascimento: document.getElementById('dataNascimento').value,
-            email: document.getElementById('email').value.toLowerCase(),
-            telefone: document.getElementById('telefone').value,
-            senha: document.getElementById('senha').value,
-            dataCadastro: new Date().toISOString(),
-            ultimoLogin: null
-        };
+        const nome = document.getElementById('nome').value;
+        const dataNascimento = document.getElementById('dataNascimento').value;
+        const email = document.getElementById('email').value.toLowerCase();
+        const telefone = document.getElementById('telefone').value;
+        const senha = document.getElementById('senha').value;
 
-        // Verificar se o e-mail já existe
-        if (this.usuarios.find(u => u.email === usuario.email)) {
-            this.mostrarNotificacao('Este e-mail já está cadastrado. Use outro e-mail ou faça login.', 'error');
-            return;
-        }
+        // Enviar para o backend
+        fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: nome, email, password: senha })
+        })
+        .then(res => res.json().then(body => ({ ok: res.ok, body })))
+        .then(({ ok, body }) => {
+            if (!ok) {
+                this.mostrarNotificacao(body.error || 'Erro ao cadastrar', 'error');
+                return;
+            }
 
-        // Adicionar usuário à lista
-        this.usuarios.push(usuario);
-        localStorage.setItem('healthTechUsers', JSON.stringify(this.usuarios));
+            // Salvar token e usuário retornado
+            localStorage.setItem('authToken', body.token);
+            localStorage.setItem('currentUser', JSON.stringify(body.user));
 
-        // Salvar usuário logado
-        localStorage.setItem('currentUser', JSON.stringify(usuario));
+            // Manter dados locais iniciais para hábitos/agenda/chat
+            this.inicializarDadosUsuario(body.user.id);
 
-        // Inicializar dados do usuário
-        this.inicializarDadosUsuario(usuario.id);
-
-        this.mostrarNotificacao('Cadastro realizado com sucesso! Redirecionando...', 'success');
-        
-        // Redirecionar para a agenda após 2 segundos
-        setTimeout(() => {
-            window.location.href = '/mvp/Agenda/agenda.html';
-        }, 2000);
+            this.mostrarNotificacao('Cadastro realizado com sucesso! Redirecionando...', 'success');
+            setTimeout(() => {
+                window.location.href = '/mvp/Agenda/agenda.html';
+            }, 1500);
+        })
+        .catch(err => {
+            console.error(err);
+            this.mostrarNotificacao('Erro de rede. Tente novamente.', 'error');
+        });
     }
 
     inicializarDadosUsuario(userId) {

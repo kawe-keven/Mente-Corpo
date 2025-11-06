@@ -1,7 +1,8 @@
 // Gerenciamento da Agenda de Saúde
 class HealthAgenda {
     constructor() {
-        this.appointments = this.loadAppointments();
+        // Inicialmente vazio; vamos tentar carregar do servidor
+        this.appointments = [];
         this.editingId = null;
         this.currentFilter = 'all';
         this.init();
@@ -10,11 +11,30 @@ class HealthAgenda {
     // Inicializar a agenda
     init() {
         this.setMinDate();
-        this.renderAppointments();
         this.setupEventListeners();
-        this.checkUpcomingAppointments();
-        this.updateStats();
-        this.updateProgressBar();
+
+        // Carregar do servidor e depois renderizar
+        if (window.api && window.api.fetchWithAuth) {
+            this.loadAppointmentsFromServer().then(() => {
+                this.renderAppointments();
+                this.checkUpcomingAppointments();
+                this.updateStats();
+                this.updateProgressBar();
+            }).catch(err => {
+                console.warn('Falha ao carregar agenda do servidor, usando localStorage.', err);
+                this.appointments = this.loadAppointments();
+                this.renderAppointments();
+                this.checkUpcomingAppointments();
+                this.updateStats();
+                this.updateProgressBar();
+            });
+        } else {
+            this.appointments = this.loadAppointments();
+            this.renderAppointments();
+            this.checkUpcomingAppointments();
+            this.updateStats();
+            this.updateProgressBar();
+        }
     }
 
     // Configurar data mínima para hoje (PERMITIR MESMO DIA)
@@ -131,6 +151,35 @@ class HealthAgenda {
         return stored ? JSON.parse(stored) : [];
     }
 
+    // Carregar agendamentos do servidor via API
+    async loadAppointmentsFromServer() {
+        const events = await window.api.fetchWithAuth('/api/agenda');
+        // Mapear eventos do backend para o formato esperado
+        this.appointments = events.map(e => {
+            const start = e.start || null;
+            let date = '';
+            let time = '';
+            if (start) {
+                const d = new Date(start);
+                date = d.toISOString().split('T')[0];
+                time = d.toTimeString().split(' ')[0].slice(0,5);
+            }
+            return {
+                id: e.id.toString(),
+                createdAt: e.created_at || new Date().toISOString(),
+                type: e.type || '',
+                description: e.title || e.details || '',
+                doctor: e.doctor || '',
+                location: e.location || '',
+                date,
+                time,
+                notes: e.details || '',
+                reminder: false,
+                completed: false
+            };
+        });
+    }
+
     // Salvar agendamentos no localStorage
     saveToStorage() {
         localStorage.setItem('healthAgenda', JSON.stringify(this.appointments));
@@ -151,33 +200,74 @@ class HealthAgenda {
             return;
         }
 
-        if (this.editingId) {
-            // Editar agendamento existente
-            const index = this.appointments.findIndex(a => a.id === this.editingId);
-            if (index !== -1) {
-                this.appointments[index] = { ...this.appointments[index], ...formData };
+        // Usar API se disponível
+        if (window.api && window.api.fetchWithAuth) {
+            if (this.editingId) {
+                // Editar evento no servidor
+                window.api.fetchWithAuth(`/api/agenda/${this.editingId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ title: formData.description, details: formData.notes, start: formData.date + (formData.time ? ' ' + formData.time : ''), end: null })
+                }).then(updated => {
+                    // Atualizar local
+                    const index = this.appointments.findIndex(a => a.id === this.editingId);
+                    if (index !== -1) this.appointments[index] = { ...this.appointments[index], ...formData };
+                    this.renderAppointments();
+                    this.updateStats();
+                    this.checkUpcomingAppointments();
+                    this.updateProgressBar();
+                    this.resetForm();
+                    this.showNotification('Agendamento atualizado!', 'success');
+                }).catch(err => {
+                    console.error(err);
+                    this.showNotification('Erro ao atualizar agendamento. Tente novamente.', 'error');
+                });
+            } else {
+                // Criar no servidor
+                window.api.fetchWithAuth('/api/agenda', {
+                    method: 'POST',
+                    body: JSON.stringify({ title: formData.description, details: formData.notes, start: formData.date + (formData.time ? ' ' + formData.time : ''), end: null })
+                }).then(created => {
+                    const newAppointment = {
+                        id: created.id.toString(),
+                        createdAt: created.created_at || new Date().toISOString(),
+                        ...formData
+                    };
+                    this.appointments.push(newAppointment);
+                    this.renderAppointments();
+                    this.updateStats();
+                    this.checkUpcomingAppointments();
+                    this.updateProgressBar();
+                    this.resetForm();
+                    this.showNotification('Agendamento salvo!', 'success');
+                }).catch(err => {
+                    console.error(err);
+                    this.showNotification('Erro ao salvar no servidor. Salvando localmente.', 'error');
+                    // fallback local
+                    const newAppointment = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...formData };
+                    this.appointments.push(newAppointment);
+                    this.saveToStorage();
+                    this.renderAppointments();
+                });
             }
         } else {
-            // Novo agendamento
-            const newAppointment = {
-                id: Date.now().toString(),
-                createdAt: new Date().toISOString(),
-                ...formData
-            };
-            this.appointments.push(newAppointment);
+            // fallback local
+            if (this.editingId) {
+                const index = this.appointments.findIndex(a => a.id === this.editingId);
+                if (index !== -1) {
+                    this.appointments[index] = { ...this.appointments[index], ...formData };
+                }
+            } else {
+                const newAppointment = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...formData };
+                this.appointments.push(newAppointment);
+            }
+            this.saveToStorage();
+            this.renderAppointments();
+            this.updateStats();
+            this.checkUpcomingAppointments();
+            this.updateProgressBar();
+            this.resetForm();
+            this.showNotification(this.editingId ? 'Agendamento atualizado!' : 'Agendamento salvo!', 'success');
         }
-
-        this.saveToStorage();
-        this.renderAppointments();
-        this.updateStats();
-        this.checkUpcomingAppointments();
-        this.updateProgressBar();
-        this.resetForm();
-        
-        this.showNotification(
-            this.editingId ? 'Agendamento atualizado!' : 'Agendamento salvo!', 
-            'success'
-        );
     }
 
     // Obter dados do formulário
@@ -249,18 +339,31 @@ class HealthAgenda {
 
     // Excluir agendamento
     deleteAppointment(id) {
-        this.appointments = this.appointments.filter(a => a.id !== id);
-        this.saveToStorage();
-        this.renderAppointments();
-        this.updateStats();
-        this.checkUpcomingAppointments();
-        this.updateProgressBar();
-        
-        // Fechar modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
-        modal.hide();
-        
-        this.showNotification('Agendamento excluído!', 'success');
+        if (window.api && window.api.fetchWithAuth) {
+            window.api.fetchWithAuth(`/api/agenda/${id}`, { method: 'DELETE' }).then(() => {
+                this.appointments = this.appointments.filter(a => a.id !== id);
+                this.renderAppointments();
+                this.updateStats();
+                this.checkUpcomingAppointments();
+                this.updateProgressBar();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+                if (modal) modal.hide();
+                this.showNotification('Agendamento excluído!', 'success');
+            }).catch(err => {
+                console.error(err);
+                this.showNotification('Erro ao excluir no servidor. Tente novamente.', 'error');
+            });
+        } else {
+            this.appointments = this.appointments.filter(a => a.id !== id);
+            this.saveToStorage();
+            this.renderAppointments();
+            this.updateStats();
+            this.checkUpcomingAppointments();
+            this.updateProgressBar();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+            if (modal) modal.hide();
+            this.showNotification('Agendamento excluído!', 'success');
+        }
     }
 
     // Marcar como concluído

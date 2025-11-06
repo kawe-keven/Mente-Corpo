@@ -1,0 +1,247 @@
+/* Configurações - Estilo Neomórfico */
+:root {
+    --primary-color: #4d8cff;
+    --primary-light: #7ab1ff;
+    --primary-dark: #2d6ac9;
+    --bg-color: #e6e9f0;
+    --surface-color: #eef0f5;
+    --text-primary: #2c3e50;
+    --text-secondary: #5d6d7e;
+    --shadow-light: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
+    --shadow-dark: 8px 8px 16px #c5c9d4, -8px -8px 16px #ffffff;
+    --shadow-inset: inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff;
+    --border-radius: 16px;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1d28;
+    --surface-color: #252a38;
+    --text-primary: #ecf0f1;
+    --text-secondary: #bdc3c7;
+    --shadow-light: 8px 8px 16px #151820, -8px -8px 16px #2a3240;
+    --shadow-dark: 8px 8px 16px #13161f, -8px -8px 16px #2d3545;
+    --shadow-inset: inset 3px 3px 6px #151820, inset -3px -3px 6px #2a3240;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+}
+
+/* Cards Neomórficos */
+.neo-card {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.neo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.8);
+}
+
+/* Inputs Neomórficos */
+.neo-input {
+    background: var(--surface-color);
+    border: none;
+    border-radius: 12px;
+    box-shadow: var(--shadow-inset);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.neo-input:focus {
+    outline: none;
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--primary-light);
+}
+
+.form-select.neo-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235d6d7e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+}
+
+/* Botões Neomórficos */
+.neo-button {
+    background: var(--surface-color);
+    border: none;
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+    padding: 10px 20px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.neo-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+}
+
+.neo-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-inset);
+}
+
+.neo-button.primary {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff, inset 0 0 0 transparent;
+}
+
+.neo-button.primary:hover {
+    background: var(--primary-dark);
+    box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+}
+
+/* Switch personalizado */
+.form-check-input {
+    width: 50px;
+    height: 26px;
+    background: var(--surface-color);
+    border: none;
+    box-shadow: var(--shadow-inset);
+    position: relative;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2), inset -3px -3px 6px rgba(255, 255, 255, 0.2);
+}
+
+.form-check-input:focus {
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--primary-light);
+}
+
+/* Navbar neomórfica */
+.navbar {
+    background: var(--surface-color) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    color: var(--primary-color) !important;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-link {
+    color: var(--text-primary) !important;
+    border-radius: 10px;
+    margin: 0 2px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background: var(--surface-color);
+    box-shadow: var(--shadow-inset);
+    color: var(--primary-color) !important;
+}
+
+.nav-link.active {
+    background: var(--surface-color);
+    box-shadow: var(--shadow-inset);
+    color: var(--primary-color) !important;
+}
+
+/* Dropdown neomórfico */
+.dropdown-menu {
+    background: var(--surface-color);
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+}
+
+.dropdown-item {
+    color: var(--text-primary);
+    border-radius: 8px;
+    margin: 2px 8px;
+    width: auto;
+}
+
+.dropdown-item:hover {
+    background: var(--surface-color);
+    box-shadow: var(--shadow-inset);
+    color: var(--primary-color);
+}
+
+/* Botão de tema */
+.theme-toggle {
+    background: var(--surface-color);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-light);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    margin-right: 10px;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+}
+
+/* Footer */
+footer.neo-card {
+    background: var(--surface-color);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Títulos e textos */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .neo-card {
+        margin-bottom: 1rem;
+    }
+    
+    .neo-button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    :root {
+        --border-radius: 12px;
+    }
+}
+
+/* Animações suaves */
+* {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* Ícones */
+.taskbar-icon {
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.bi {
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.1));
+}

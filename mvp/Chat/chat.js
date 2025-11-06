@@ -7,9 +7,36 @@ class SafeSpace {
     }
 
     init() {
-        this.renderPosts();
         this.setupEventListeners();
-        this.updateStats();
+
+        // Tentar carregar do servidor
+        if (window.api && window.api.fetchWithAuth) {
+            window.api.fetchWithAuth('/api/chat').then(messages => {
+                // messages: [{id, content, created_at, user_id, user_name}]
+                this.posts = messages.map(m => ({
+                    id: m.id.toString(),
+                    title: '',
+                    content: m.content,
+                    category: 'desabafo',
+                    timestamp: new Date(m.created_at).getTime(),
+                    likes: 0,
+                    comments: 0,
+                    sensitive: false,
+                    author: m.user_name || 'Anônimo'
+                }));
+                this.renderPosts();
+                this.updateStats();
+            }).catch(err => {
+                console.warn('Erro ao carregar mensagens do servidor, usando localStorage.', err);
+                this.posts = this.loadPosts();
+                this.renderPosts();
+                this.updateStats();
+            });
+        } else {
+            this.posts = this.loadPosts();
+            this.renderPosts();
+            this.updateStats();
+        }
     }
 
     setupEventListeners() {
@@ -79,24 +106,51 @@ class SafeSpace {
             return;
         }
 
-        const newPost = {
-            id: Date.now().toString(),
-            title: title.trim(),
-            content: content.trim(),
-            category,
-            timestamp: new Date().getTime(),
-            likes: 0,
-            comments: 0,
-            sensitive,
-            author: this.generateAnonymousName()
-        };
+        // Enviar para o servidor (conteúdo será salvo com user_id do token)
+        if (window.api && window.api.fetchWithAuth) {
+            window.api.fetchWithAuth('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({ content: content.trim() })
+            }).then(created => {
+                const post = {
+                    id: created.id.toString(),
+                    title: title.trim(),
+                    content: created.content,
+                    category,
+                    timestamp: new Date(created.created_at).getTime(),
+                    likes: 0,
+                    comments: 0,
+                    sensitive,
+                    author: created.user_name || 'Anônimo'
+                };
+                this.posts.unshift(post);
+                this.savePosts();
+                this.renderPosts();
+                this.resetForm();
+                this.showNotification('Mensagem publicada com sucesso!', 'success');
+            }).catch(err => {
+                console.error(err);
+                this.showNotification('Erro ao publicar. Tente novamente.', 'error');
+            });
+        } else {
+            const newPost = {
+                id: Date.now().toString(),
+                title: title.trim(),
+                content: content.trim(),
+                category,
+                timestamp: new Date().getTime(),
+                likes: 0,
+                comments: 0,
+                sensitive,
+                author: this.generateAnonymousName()
+            };
 
-        this.posts.unshift(newPost);
-        this.savePosts();
-        this.renderPosts();
-        this.resetForm();
-        
-        this.showNotification('Mensagem publicada com sucesso!', 'success');
+            this.posts.unshift(newPost);
+            this.savePosts();
+            this.renderPosts();
+            this.resetForm();
+            this.showNotification('Mensagem publicada com sucesso!', 'success');
+        }
     }
 
     // Gerar nome anônimo aleatório

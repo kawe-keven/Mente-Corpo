@@ -1,0 +1,524 @@
+/* ===== VARIÁVEIS CSS ===== */
+:root {
+    --primary-color: #4d8cff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --bg-color: #f0f2f5;
+    --dark-color: #333333;
+    --light-color: #ffffff;
+    --shadow-dark: #d1d9e6;
+    --shadow-light: #ffffff;
+}
+
+/* ===== ESTILOS BASE ===== */
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--dark-color);
+    margin: 0;
+    padding: 0;
+}
+
+/* Cards no estilo neomórfico */
+.neo-card {
+    background: var(--bg-color);
+    border-radius: 15px;
+    box-shadow: 8px 8px 16px var(--shadow-dark), 
+                -8px -8px 16px var(--shadow-light);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.neo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 10px 10px 20px var(--shadow-dark), 
+                -10px -10px 20px var(--shadow-light);
+}
+
+/* Botões no estilo neomórfico */
+.neo-button {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    box-shadow: 5px 5px 10px var(--shadow-dark), 
+                -5px -5px 10px var(--shadow-light);
+    transition: all 0.3s ease;
+    color: var(--dark-color);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+}
+
+.neo-button:hover {
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    transform: translateY(2px);
+    color: var(--dark-color);
+}
+
+.neo-button-primary {
+    background: linear-gradient(145deg, var(--primary-color), #3a7be0);
+    color: white;
+    box-shadow: 5px 5px 10px var(--shadow-dark), 
+                -5px -5px 10px var(--shadow-light);
+}
+
+.neo-button-primary:hover {
+    background: linear-gradient(145deg, #3a7be0, var(--primary-color));
+    color: white;
+}
+
+/* Navbar estilizada */
+.navbar {
+    background: var(--bg-color) !important;
+    box-shadow: 5px 5px 15px var(--shadow-dark), 
+                -5px -5px 15px var(--shadow-light);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: var(--primary-color) !important;
+}
+
+.nav-link {
+    color: var(--dark-color) !important;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+.nav-link.active {
+    color: var(--primary-color) !important;
+    font-weight: bold;
+}
+
+.taskbar-icon {
+    filter: brightness(0.8);
+}
+
+/* Ícones */
+.icon-large {
+    font-size: 3rem;
+}
+
+.icon-medium {
+    font-size: 2rem;
+}
+
+/* Barra de Progresso */
+.progress-bar {
+    height: 15px;
+    border-radius: 10px;
+    background: var(--bg-color);
+    box-shadow: inset 5px 5px 10px var(--shadow-dark), 
+                inset -5px -5px 10px var(--shadow-light);
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, var(--primary-color), #3a7be0);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    box-shadow: 2px 2px 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Estatísticas */
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
+/* Header */
+header h1 {
+    color: var(--primary-color);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer */
+footer {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 8px 8px 16px var(--shadow-dark), 
+                -8px -8px 16px var(--shadow-light);
+}
+
+.dropdown-item {
+    color: var(--dark-color);
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.neo-card {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .icon-large {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .neo-card {
+        padding: 1rem !important;
+    }
+}
+
+/* Utilitários */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.text-info {
+    color: var(--info-color) !important;
+}
+
+.text-muted {
+    color: var(--secondary-color) !important;
+}
+
+/* Listas estilizadas */
+.list-unstyled li {
+    padding: 5px 0;
+    border-bottom: 1px solid var(--shadow-dark);
+}
+
+.list-unstyled li:last-child {
+    border-bottom: none;
+}
+
+/* Links de ação rápida */
+.neo-card.text-center:hover {
+    transform: translateY(-5px);
+    box-shadow: 12px 12px 24px var(--shadow-dark), 
+                -12px -12px 24px var(--shadow-light);
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA PÁGINA DE PERFIL ===== */
+
+.profile-header {
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-cover {
+    height: 200px;
+    background: linear-gradient(145deg, var(--primary-color), #3a7be0);
+    border-radius: 15px 15px 0 0;
+}
+
+.profile-avatar-container {
+    position: relative;
+    display: inline-block;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: -60px;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid var(--bg-color);
+    background-color: var(--light-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--primary-color);
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.avatar-edit-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 3px 3px 6px var(--shadow-dark);
+    transition: all 0.3s ease;
+}
+
+.avatar-edit-btn:hover {
+    transform: scale(1.1);
+    background: #3a7be0;
+}
+
+.profile-info {
+    margin-top: 70px;
+    padding-bottom: 20px;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.stat-item {
+    padding: 10px;
+}
+
+.activity-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--primary-color);
+    opacity: 0.3;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+}
+
+.timeline-date {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
+.edit-profile-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.badge-custom {
+    background: var(--bg-color);
+    color: var(--dark-color);
+    box-shadow: 3px 3px 6px var(--shadow-dark), 
+                -3px -3px 6px var(--shadow-light);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-weight: normal;
+}
+
+/* Modal estilizado */
+.modal-content.neo-card {
+    background: var(--bg-color);
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--shadow-dark);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--shadow-dark);
+}
+
+/* Formulários */
+.form-control, .form-select {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 10px;
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    padding: 10px 15px;
+}
+
+.form-control:focus, .form-select:focus {
+    background: var(--bg-color);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light),
+                0 0 0 2px var(--primary-color);
+    border: none;
+}
+
+/* Range input customizado */
+.form-range {
+    background: transparent;
+}
+
+.form-range::-webkit-slider-track {
+    background: var(--bg-color);
+    border-radius: 10px;
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    height: 8px;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 3px 3px 6px var(--shadow-dark);
+    width: 20px;
+    height: 20px;
+}
+
+.form-range::-moz-range-track {
+    background: var(--bg-color);
+    border-radius: 10px;
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+                inset -3px -3px 6px var(--shadow-light);
+    height: 8px;
+    border: none;
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 3px 3px 6px var(--shadow-dark);
+    width: 20px;
+    height: 20px;
+}
+
+/* Preview do avatar */
+.avatar-preview .profile-avatar {
+    width: 150px;
+    height: 150px;
+    font-size: 4rem;
+}
+
+/* Metas de saúde */
+.goal-item {
+    transition: all 0.3s ease;
+}
+
+.goal-item:hover {
+    transform: translateY(-2px);
+}
+
+.goal-category-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+    
+    .avatar-edit-btn {
+        width: 30px;
+        height: 30px;
+        bottom: 3px;
+        right: 3px;
+    }
+    
+    .profile-info {
+        margin-top: 60px;
+    }
+    
+    .edit-profile-btn {
+        position: static;
+        margin-top: 10px;
+    }
+    
+    .activity-timeline {
+        padding-left: 20px;
+    }
+    
+    .activity-timeline::before {
+        left: 10px;
+    }
+    
+    .timeline-item::before {
+        left: -18px;
+    }
+    
+    .avatar-preview .profile-avatar {
+        width: 120px;
+        height: 120px;
+        font-size: 3rem;
+    }
+}
