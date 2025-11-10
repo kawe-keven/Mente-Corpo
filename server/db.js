@@ -1,6 +1,7 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 async function initDb() {
   const dbPath = path.join(__dirname, 'data', 'database.db');
@@ -65,6 +66,105 @@ async function initDb() {
   } catch (err) {
     console.warn('Could not run migration for events.completed:', err.message || err);
   }
+
+  // =============================================
+  // 🔐 SISTEMA DE AUTENTICAÇÃO - PARTE NOVA
+  // =============================================
+  
+  // Função para criar usuário (REGISTRO)
+  db.createUser = async (name, email, password) => {
+    try {
+      console.log(`📝 Tentando criar usuário: ${email}`);
+      
+      // Hash da senha com bcrypt
+      const passwordHash = await bcrypt.hash(password, 12);
+      
+      // Inserir no banco
+      const result = await db.run(
+        "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+        [name, email, passwordHash]
+      );
+      
+      console.log(`✅ Usuário criado com ID: ${result.lastID}`);
+      return { 
+        success: true, 
+        userId: result.lastID,
+        message: 'Usuário criado com sucesso' 
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro ao criar usuário:', error.message);
+      
+      if (error.message.includes('UNIQUE constraint failed')) {
+        return { 
+          success: false, 
+          error: 'Este email já está cadastrado' 
+        };
+      }
+      
+      return { 
+        success: false, 
+        error: 'Erro ao criar usuário: ' + error.message 
+      };
+    }
+  };
+
+  // Função para verificar login
+  db.verifyLogin = async (email, password) => {
+    try {
+      console.log(`🔐 Tentando login para: ${email}`);
+      
+      // Buscar usuário pelo email
+      const user = await db.get(
+        "SELECT id, name, email, password_hash FROM users WHERE email = ?",
+        [email]
+      );
+
+      if (!user) {
+        console.log('❌ Usuário não encontrado');
+        return { 
+          success: false, 
+          error: 'Email não cadastrado' 
+        };
+      }
+
+      // Verificar senha com bcrypt
+      const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+      
+      if (!isPasswordValid) {
+        console.log('❌ Senha incorreta');
+        return { 
+          success: false, 
+          error: 'Senha incorreta' 
+        };
+      }
+
+      console.log(`✅ Login bem-sucedido para: ${user.name}`);
+      return { 
+        success: true, 
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        }
+      };
+      
+    } catch (error) {
+      console.error('💥 Erro no login:', error.message);
+      return { 
+        success: false, 
+        error: 'Erro interno no servidor' 
+      };
+    }
+  };
+
+  // Função para buscar usuário por ID (sem senha)
+  db.getUserById = async (userId) => {
+    return await db.get(
+      "SELECT id, name, email, created_at FROM users WHERE id = ?",
+      [userId]
+    );
+  };
 
   return db;
 }

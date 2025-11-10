@@ -9,7 +9,7 @@ class AuthProtection {
     }
 
     isUserLoggedIn() {
-        // Consider user logged-in when we have either the JWT token or the stored currentUser
+       
         return !!(localStorage.getItem('authToken') || localStorage.getItem('currentUser'));
     }
 
