@@ -8,6 +8,7 @@ const userRoutes = require('./routes/users');
 const habitsRoutes = require('./routes/habits');
 const agendaRoutes = require('./routes/agenda');
 const chatRoutes = require('./routes/chat');
+const contentRoutes = require('./routes/content');
 
 const PORT = process.env.PORT || 4000;
 
@@ -26,6 +27,7 @@ const PORT = process.env.PORT || 4000;
   app.use('/api/habits', habitsRoutes);
   app.use('/api/agenda', agendaRoutes);
   app.use('/api/chat', chatRoutes);
+  app.use('/api/content', contentRoutes);
 
   // Serve frontend (mvp/) under the /mvp path so existing absolute links work
   const mvpPath = path.join(__dirname, '..', 'mvp');

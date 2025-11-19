@@ -5,10 +5,51 @@ class Dashboard {
     }
 
     init() {
+        this.checkAuthStatus();
         this.loadDashboardData();
         this.updateStats();
         this.loadUpcomingAppointments();
         this.setupEventListeners();
+    }
+
+    // Verificar status de autenticação e mostrar menu apropriado
+    checkAuthStatus() {
+        const isLoggedIn = !!(localStorage.getItem('authToken') || localStorage.getItem('currentUser'));
+        const userMenu = document.getElementById('user-menu');
+        const guestMenu = document.getElementById('guest-menu');
+        
+        // Elementos que devem ser visíveis apenas para usuários autenticados
+        const userStats = document.getElementById('user-stats');
+        const userProgress = document.getElementById('user-progress');
+        const quickActions = document.getElementById('quick-actions');
+        
+        if (isLoggedIn) {
+            if (userMenu) userMenu.style.display = 'block';
+            if (guestMenu) guestMenu.style.display = 'none';
+            if (userStats) userStats.style.display = 'block';
+            if (userProgress) userProgress.style.display = 'block';
+            if (quickActions) quickActions.style.display = 'block';
+            
+            // Configurar logout
+            const logoutBtn = document.querySelector('[data-logout]');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (confirm('Tem certeza que deseja sair?')) {
+                        localStorage.removeItem('currentUser');
+                        localStorage.removeItem('authToken');
+                        sessionStorage.removeItem('redirectAfterLogin');
+                        window.location.reload();
+                    }
+                });
+            }
+        } else {
+            if (userMenu) userMenu.style.display = 'none';
+            if (guestMenu) guestMenu.style.display = 'flex';
+            if (userStats) userStats.style.display = 'none';
+            if (userProgress) userProgress.style.display = 'none';
+            if (quickActions) quickActions.style.display = 'none';
+        }
     }
 
     // Carregar dados do dashboard

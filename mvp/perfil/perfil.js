@@ -18,6 +18,28 @@ class UserProfile {
 
     // Carregar dados do usuário do cadastro / backend
     async loadUserData() {
+        // Primeiro, tentar pegar os dados do currentUser (salvos no login/cadastro)
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (currentUser) {
+            const userData = {
+                name: currentUser.name || 'Usuário',
+                email: currentUser.email || '',
+                fullName: currentUser.name || '',
+                birthdate: currentUser.birthdate || '',
+                gender: currentUser.gender || '',
+                phone: currentUser.phone || '',
+                registrationDate: currentUser.created_at || new Date().toISOString(),
+                avatar: currentUser.avatar || null
+            };
+            
+            this.userData = userData;
+            localStorage.setItem('userData', JSON.stringify(userData));
+            this.displayUserData();
+            return;
+        }
+
+        // Fallback: tentar buscar do backend
         const token = localStorage.getItem('authToken');
         if (token) {
             try {
@@ -26,12 +48,11 @@ class UserProfile {
                 });
                 if (res.ok) {
                     const user = await res.json();
-                    // Normalizar para o formato esperado pelo perfil
                     const userData = {
                         name: user.name || 'Usuário',
-                        email: user.email || 'usuario@exemplo.com',
-                        fullName: user.name || user.fullName || 'Nome Completo do Usuário',
-                        birthdate: user.birthdate || '1990-01-01',
+                        email: user.email || '',
+                        fullName: user.name || user.fullName || '',
+                        birthdate: user.birthdate || '',
                         gender: user.gender || '',
                         phone: user.phone || '',
                         registrationDate: user.created_at || new Date().toISOString(),
@@ -39,6 +60,7 @@ class UserProfile {
                     };
                     this.userData = userData;
                     localStorage.setItem('userData', JSON.stringify(userData));
+                    localStorage.setItem('currentUser', JSON.stringify(user));
                     this.displayUserData();
                     return;
                 }
@@ -47,15 +69,13 @@ class UserProfile {
             }
         }
 
-        // Fallback: buscar dados do cadastro no localStorage
-        const cadastroData = JSON.parse(localStorage.getItem('cadastroData')) || {};
+        // Último fallback: dados básicos do localStorage antigo
         const existingProfileData = JSON.parse(localStorage.getItem('userData')) || {};
-
         const userData = {
-            name: cadastroData.nome || existingProfileData.name || 'Usuário',
-            email: cadastroData.email || existingProfileData.email || 'usuario@exemplo.com',
-            fullName: existingProfileData.fullName || cadastroData.nome || 'Nome Completo do Usuário',
-            birthdate: existingProfileData.birthdate || '1990-01-01',
+            name: existingProfileData.name || 'Usuário',
+            email: existingProfileData.email || '',
+            fullName: existingProfileData.fullName || '',
+            birthdate: existingProfileData.birthdate || '',
             gender: existingProfileData.gender || '',
             phone: existingProfileData.phone || '',
             registrationDate: existingProfileData.registrationDate || new Date().toISOString(),
@@ -63,7 +83,6 @@ class UserProfile {
         };
 
         this.userData = userData;
-        localStorage.setItem('userData', JSON.stringify(userData));
         this.displayUserData();
     }
 
@@ -138,16 +157,17 @@ class UserProfile {
 
     // Exibir dados do usuário
     displayUserData() {
-        document.getElementById('user-name').textContent = this.userData.name;
-        document.getElementById('user-email').textContent = this.userData.email;
+        document.getElementById('user-name').textContent = this.userData.name || 'Usuário';
+        document.getElementById('user-email').textContent = this.userData.email || 'Email não cadastrado';
         
         // Informações pessoais
-        document.getElementById('info-fullname').textContent = this.userData.fullName || 'Não informado';
-        document.getElementById('info-birthdate').textContent = this.userData.birthdate ? 
-            this.formatDate(this.userData.birthdate) : 'Não informado';
-        document.getElementById('info-gender').textContent = this.userData.gender ? 
-            this.capitalizeFirst(this.userData.gender) : 'Não informado';
-        document.getElementById('info-phone').textContent = this.userData.phone || 'Não informado';
+        document.getElementById('info-fullname').textContent = this.userData.fullName || this.userData.name || 'Nome não informado';
+        document.getElementById('info-birthdate').textContent = this.userData.birthdate && this.userData.birthdate !== '' ? 
+            this.formatDate(this.userData.birthdate) : 'Data não informada';
+        document.getElementById('info-gender').textContent = this.userData.gender && this.userData.gender !== '' ? 
+            this.capitalizeFirst(this.userData.gender) : 'Não especificado';
+        document.getElementById('info-phone').textContent = this.userData.phone && this.userData.phone !== '' ? 
+            this.userData.phone : 'Telefone não cadastrado';
 
         // Data de registro
         const registrationDate = new Date(this.userData.registrationDate);

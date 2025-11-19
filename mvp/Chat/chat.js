@@ -41,24 +41,39 @@ class SafeSpace {
 
     setupEventListeners() {
         // Formulário de nova postagem
-        document.getElementById('post-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.createPost();
-        });
+        const postForm = document.getElementById('post-form');
+        if (postForm) {
+            postForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.createPost();
+            });
+        } else {
+            console.error('Formulário post-form não encontrado!');
+        }
 
         // Filtros
-        document.getElementById('filter-category').addEventListener('change', () => {
-            this.renderPosts();
-        });
+        const filterCategory = document.getElementById('filter-category');
+        if (filterCategory) {
+            filterCategory.addEventListener('change', () => {
+                this.renderPosts();
+            });
+        }
 
-        document.getElementById('sort-posts').addEventListener('change', () => {
-            this.renderPosts();
-        });
+        const sortPosts = document.getElementById('sort-posts');
+        if (sortPosts) {
+            sortPosts.addEventListener('change', () => {
+                this.renderPosts();
+            });
+        }
 
         // Busca
-        document.getElementById('search-posts').addEventListener('input', (e) => {
-            this.renderPosts(e.target.value);
-        });
+        const searchPosts = document.getElementById('search-posts');
+        if (searchPosts) {
+            searchPosts.addEventListener('input', (e) => {
+                this.renderPosts(e.target.value);
+            });
+        }
     }
 
     // Carregar posts do localStorage
@@ -96,10 +111,22 @@ class SafeSpace {
 
     // Criar nova postagem
     createPost() {
-        const title = document.getElementById('post-title').value;
-        const content = document.getElementById('post-content').value;
-        const category = document.getElementById('post-category').value;
-        const sensitive = document.getElementById('post-sensitive').checked;
+        const titleInput = document.getElementById('post-title');
+        const contentInput = document.getElementById('post-content');
+        const categoryInput = document.getElementById('post-category');
+        const sensitiveInput = document.getElementById('post-sensitive');
+
+        // Verificar se os elementos existem
+        if (!titleInput || !contentInput || !categoryInput || !sensitiveInput) {
+            console.error('Elementos do formulário não encontrados');
+            this.showNotification('Erro: Formulário não encontrado!', 'error');
+            return;
+        }
+
+        const title = titleInput.value;
+        const content = contentInput.value;
+        const category = categoryInput.value;
+        const sensitive = sensitiveInput.checked;
 
         if (!content.trim()) {
             this.showNotification('Por favor, escreva sua mensagem!', 'error');
@@ -129,28 +156,35 @@ class SafeSpace {
                 this.resetForm();
                 this.showNotification('Mensagem publicada com sucesso!', 'success');
             }).catch(err => {
-                console.error(err);
-                this.showNotification('Erro ao publicar. Tente novamente.', 'error');
+                console.error('Erro ao publicar mensagem:', err);
+                // Se o servidor não estiver disponível, salvar localmente
+                this.savePostLocally(title, content, category, sensitive);
             });
         } else {
-            const newPost = {
-                id: Date.now().toString(),
-                title: title.trim(),
-                content: content.trim(),
-                category,
-                timestamp: new Date().getTime(),
-                likes: 0,
-                comments: 0,
-                sensitive,
-                author: this.generateAnonymousName()
-            };
-
-            this.posts.unshift(newPost);
-            this.savePosts();
-            this.renderPosts();
-            this.resetForm();
-            this.showNotification('Mensagem publicada com sucesso!', 'success');
+            // Se não tiver API disponível, salvar localmente
+            this.savePostLocally(title, content, category, sensitive);
         }
+    }
+
+    // Salvar post localmente (fallback)
+    savePostLocally(title, content, category, sensitive) {
+        const newPost = {
+            id: Date.now().toString(),
+            title: title.trim(),
+            content: content.trim(),
+            category,
+            timestamp: new Date().getTime(),
+            likes: 0,
+            comments: 0,
+            sensitive,
+            author: this.generateAnonymousName()
+        };
+
+        this.posts.unshift(newPost);
+        this.savePosts();
+        this.renderPosts();
+        this.resetForm();
+        this.showNotification('Mensagem publicada com sucesso!', 'success');
     }
 
     // Gerar nome anônimo aleatório
@@ -356,7 +390,10 @@ class SafeSpace {
 
     // Resetar formulário
     resetForm() {
-        document.getElementById('post-form').reset();
+        const form = document.getElementById('post-form');
+        if (form) {
+            form.reset();
+        }
     }
 
     // Utilitários

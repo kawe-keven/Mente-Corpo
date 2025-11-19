@@ -62,7 +62,14 @@ class Login {
             this.mostrarNotificacao('Login realizado com sucesso! Redirecionando...', 'success');
 
             setTimeout(() => {
-                window.location.href = '/mvp/inicio/inicio.html';
+                // Verificar se há uma URL de redirecionamento salva
+                const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+                if (redirectUrl) {
+                    sessionStorage.removeItem('redirectAfterLogin');
+                    window.location.href = redirectUrl;
+                } else {
+                    window.location.href = '/mvp/inicio/inicio.html';
+                }
             }, 800);
         } catch (err) {
             console.error(err);

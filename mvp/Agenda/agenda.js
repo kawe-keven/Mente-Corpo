@@ -37,13 +37,13 @@ class HealthAgenda {
         }
     }
 
-    // Configurar data mínima para hoje (PERMITIR MESMO DIA)
+    // Configurar data mínima para hoje
     setMinDate() {
         const today = new Date();
         const todayFormatted = today.toISOString().split('T')[0];
         document.getElementById('appointment-date').min = todayFormatted;
         
-        // Listener para atualizar hora mínima dinamicamente E ADICIONAR 1 DIA
+        // Listener para atualizar hora mínima dinamicamente
         document.getElementById('appointment-date').addEventListener('change', (e) => {
             const selectedDate = e.target.value; // Formato: YYYY-MM-DD
             const today = new Date();
@@ -59,46 +59,7 @@ class HealthAgenda {
                 // Se for data futura, permitir qualquer horário
                 document.getElementById('appointment-time').min = '00:00';
             }
-            
-            // ADICIONAR 1 DIA APÓS O INPUT DO USUÁRIO
-            this.addOneDayAfterInput(selectedDate);
         });
-    }
-
-    // NOVO MÉTODO: Adicionar 1 dia após o input do usuário
-    addOneDayAfterInput(selectedDate) {
-        if (!selectedDate) return;
-        
-        // Converter a data selecionada para objeto Date
-        const date = new Date(selectedDate);
-        
-        // Adicionar 1 dia
-        date.setDate(date.getDate() + 1);
-        
-        // Formatar a nova data para YYYY-MM-DD
-        const nextDay = date.toISOString().split('T')[0];
-        
-        // Preencher automaticamente o campo com a data do próximo dia
-        document.getElementById('appointment-date').value = nextDay;
-        
-        // Mostrar notificação informando sobre a alteração
-        this.showNotification(
-            `Data ajustada para: ${this.formatDate(nextDay)}`, 
-            'info'
-        );
-        
-        // Atualizar também a validação de hora para a nova data
-        const today = new Date();
-        const todayFormatted = today.toISOString().split('T')[0];
-        
-        if (nextDay === todayFormatted) {
-            const now = new Date();
-            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
-                               now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('appointment-time').min = currentTime;
-        } else {
-            document.getElementById('appointment-time').min = '00:00';
-        }
     }
 
     // Configurar event listeners
@@ -131,17 +92,6 @@ class HealthAgenda {
         // Confirmação de exclusão
         document.getElementById('confirm-delete').addEventListener('click', () => {
             this.deleteAppointment(this.editingId);
-        });
-
-        // NOVO: Adicionar 1 dia também no evento de input (em tempo real)
-        document.getElementById('appointment-date').addEventListener('input', (e) => {
-            const selectedDate = e.target.value;
-            if (selectedDate) {
-                // Pequeno delay para garantir que o valor foi completamente inserido
-                setTimeout(() => {
-                    this.addOneDayAfterInput(selectedDate);
-                }, 500);
-            }
         });
     }
 
@@ -445,14 +395,14 @@ class HealthAgenda {
         switch (this.currentFilter) {
             case 'upcoming':
                 filteredAppointments = filteredAppointments.filter(a => {
-                    const appointmentDate = new Date(a.date);
+                    const appointmentDate = this.parseLocalDate(a.date);
                     appointmentDate.setHours(0, 0, 0, 0);
                     return appointmentDate >= today && !a.completed;
                 });
                 break;
             case 'past':
                 filteredAppointments = filteredAppointments.filter(a => {
-                    const appointmentDate = new Date(a.date);
+                    const appointmentDate = this.parseLocalDate(a.date);
                     appointmentDate.setHours(0, 0, 0, 0);
                     return appointmentDate < today || a.completed;
                 });
@@ -476,7 +426,7 @@ class HealthAgenda {
         }
 
         // Ordenar por data (mais próximos primeiro)
-        filteredAppointments.sort((a, b) => new Date(a.date) - new Date(b.date));
+        filteredAppointments.sort((a, b) => this.parseLocalDate(a.date) - this.parseLocalDate(b.date));
 
         if (filteredAppointments.length === 0) {
             container.innerHTML = '';
@@ -490,7 +440,7 @@ class HealthAgenda {
 
     // Criar card de agendamento
     createAppointmentCard(appointment) {
-        const appointmentDate = new Date(appointment.date);
+        const appointmentDate = this.parseLocalDate(appointment.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -585,7 +535,7 @@ class HealthAgenda {
         nextWeek.setDate(today.getDate() + 7);
         
         const upcomingAppointments = this.appointments.filter(appointment => {
-            const appointmentDate = new Date(appointment.date);
+            const appointmentDate = this.parseLocalDate(appointment.date);
             appointmentDate.setHours(0, 0, 0, 0);
             
             return !appointment.completed && 
@@ -643,7 +593,7 @@ class HealthAgenda {
 
         const total = this.appointments.length;
         const upcoming = this.appointments.filter(a => {
-            const appointmentDate = new Date(a.date);
+            const appointmentDate = this.parseLocalDate(a.date);
             appointmentDate.setHours(0, 0, 0, 0);
             return !a.completed && appointmentDate >= today && appointmentDate <= nextWeek;
         }).length;
@@ -665,11 +615,11 @@ class HealthAgenda {
         // Encontrar próximo agendamento não concluído
         const upcomingAppointments = this.appointments
             .filter(a => {
-                const appointmentDate = new Date(a.date);
+                const appointmentDate = this.parseLocalDate(a.date);
                 appointmentDate.setHours(0, 0, 0, 0);
                 return !a.completed && appointmentDate >= today;
             })
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
+            .sort((a, b) => this.parseLocalDate(a.date) - this.parseLocalDate(b.date));
         
         // Se não existir o container, criar um
         if (!document.getElementById('progress-container')) {
@@ -681,7 +631,10 @@ class HealthAgenda {
         const progressDays = document.getElementById('progress-days');
         
         if (upcomingAppointments.length === 0) {
-            if (progressFill) progressFill.style.width = '0%';
+            if (progressFill) {
+                progressFill.style.width = '0%';
+                progressFill.style.background = 'linear-gradient(45deg, #28a745, #48c78e)';
+            }
             if (progressText) progressText.textContent = 'Nenhum agendamento futuro';
             if (progressDays) progressDays.textContent = '';
             return;
@@ -694,23 +647,23 @@ class HealthAgenda {
         const maxDays = 30;
         const progress = Math.max(0, Math.min(100, ((maxDays - daysUntil) / maxDays) * 100));
         
+        // Atualizar cor baseada na urgência ANTES de definir a largura
+        let bgColor = 'linear-gradient(45deg, #28a745, #48c78e)';
+        if (daysUntil <= 1) {
+            bgColor = 'linear-gradient(45deg, #dc3545, #e4606d)';
+        } else if (daysUntil <= 3) {
+            bgColor = 'linear-gradient(45deg, #ffc107, #ffd54f)';
+        } else if (daysUntil <= 7) {
+            bgColor = 'linear-gradient(45deg, #17a2b8, #39c0d3)';
+        }
+        
         // Atualizar display
-        if (progressFill) progressFill.style.width = `${progress}%`;
+        if (progressFill) {
+            progressFill.style.background = bgColor;
+            progressFill.style.width = `${progress}%`;
+        }
         if (progressText) progressText.textContent = `Próximo: ${nextAppointment.description}`;
         if (progressDays) progressDays.textContent = daysUntil === 0 ? 'Hoje' : `${daysUntil} dias`;
-        
-        // Atualizar cor baseada na urgência
-        if (progressFill) {
-            if (daysUntil <= 1) {
-                progressFill.style.background = 'linear-gradient(45deg, #dc3545, #e4606d)';
-            } else if (daysUntil <= 3) {
-                progressFill.style.background = 'linear-gradient(45deg, #ffc107, #ffd54f)';
-            } else if (daysUntil <= 7) {
-                progressFill.style.background = 'linear-gradient(45deg, #17a2b8, #39c0d3)';
-            } else {
-                progressFill.style.background = 'linear-gradient(45deg, #28a745, #48c78e)';
-            }
-        }
     }
 
     // Criar barra de progresso no DOM
@@ -726,7 +679,7 @@ class HealthAgenda {
                             <i class="bi bi-clock text-primary me-2"></i>Progresso para Próximo Agendamento
                         </h4>
                         <div class="progress-bar mb-3">
-                            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                            <div class="progress-fill" id="progress-fill" style="width: 0%; background: linear-gradient(45deg, #28a745, #48c78e);"></div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <small id="progress-text" class="text-muted">Nenhum agendamento futuro</small>
@@ -742,12 +695,18 @@ class HealthAgenda {
 
     // Utilitários
     formatDate(dateString) {
-        const date = new Date(dateString);
-        // CORREÇÃO: Usar método correto para formatar data sem problemas de timezone
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear();
+        // Corrigir problema de timezone: usar split direto da string YYYY-MM-DD
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
+    }
+
+    // Criar objeto Date local sem problemas de timezone UTC
+    parseLocalDate(dateString) {
+        // dateString no formato YYYY-MM-DD
+        const [year, month, day] = dateString.split('-');
+        // Mês em JavaScript é 0-indexed (0 = Janeiro, 11 = Dezembro)
+        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     }
 
     // Calcular diferença em dias (CORRIGIDO)
@@ -755,7 +714,8 @@ class HealthAgenda {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const targetDate = new Date(dateString);
+        // Criar date local sem problemas de timezone UTC
+        const targetDate = this.parseLocalDate(dateString);
         targetDate.setHours(0, 0, 0, 0);
         
         // CORREÇÃO: Calcular diferença correta em dias
