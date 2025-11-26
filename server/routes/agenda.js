@@ -151,8 +151,11 @@ router.delete('/:id', auth, async (req, res) => {
     const db = req.app.locals.db;
     const { id } = req.params;
     
+    console.log('🗑️ DELETE /api/agenda/:id - ID:', id, 'User:', req.user.id);
+    
     // Validar ID
     if (!id || isNaN(parseInt(id))) {
+      console.log('❌ ID inválido:', id);
       return res.status(400).json({ error: 'ID inválido' });
     }
     
@@ -161,14 +164,18 @@ router.delete('/:id', auth, async (req, res) => {
       [id, req.user.id]
     );
     
+    console.log('📋 Evento existente:', existing);
+    
     if (!existing) {
+      console.log('❌ Evento não encontrado - ID:', id, 'User:', req.user.id);
       return res.status(404).json({ error: 'Evento não encontrado' });
     }
     
     await db.run('DELETE FROM events WHERE id = ?', [id]);
+    console.log('✅ Evento excluído com sucesso - ID:', id);
     res.json({ success: true, message: 'Evento excluído com sucesso' });
   } catch (error) {
-    console.error('Erro ao excluir evento:', error);
+    console.error('❌ Erro ao excluir evento:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

@@ -12,6 +12,9 @@ class HealthAgenda {
     init() {
         this.setMinDate();
         this.setupEventListeners();
+        
+        // Criar a barra de progresso imediatamente
+        this.createProgressBar();
 
         // Carregar do servidor e depois renderizar
         if (window.api && window.api.fetchWithAuth) {
@@ -147,15 +150,22 @@ class HealthAgenda {
 
     // Salvar/editar agendamento
     saveAppointment() {
+        console.log('💾 Salvando agendamento...');
         const formData = this.getFormData();
         
-        if (!formData) return;
+        if (!formData) {
+            console.log('❌ FormData inválido');
+            return;
+        }
+
+        console.log('📋 Dados do formulário:', formData);
 
         // VALIDAÇÃO: Verificar se é um agendamento para data/hora passada
         const appointmentDateTime = new Date(formData.date + ' ' + (formData.time || '00:00'));
         const now = new Date();
         
         if (appointmentDateTime < now && !this.editingId) {
+            console.log('❌ Data/hora no passado');
             this.showNotification('Não é possível agendar para uma data/hora que já passou!', 'error');
             return;
         }
@@ -163,14 +173,17 @@ class HealthAgenda {
         // Usar API se disponível
         if (window.api && window.api.fetchWithAuth) {
             if (this.editingId) {
+                console.log('✏️ Editando agendamento:', this.editingId);
                 // Editar evento no servidor
                 window.api.fetchWithAuth(`/api/agenda/${this.editingId}`, {
                     method: 'PUT',
                     body: JSON.stringify({ title: formData.description, details: formData.notes, start: formData.date + (formData.time ? ' ' + formData.time : ''), end: null })
                 }).then(updated => {
+                    console.log('✅ Agendamento atualizado no servidor:', updated);
                     // Atualizar local
-                    const index = this.appointments.findIndex(a => a.id === this.editingId);
+                    const index = this.appointments.findIndex(a => a.id === this.editingId || a.id.toString() === this.editingId.toString());
                     if (index !== -1) this.appointments[index] = { ...this.appointments[index], ...formData };
+                    this.saveToStorage();
                     this.renderAppointments();
                     this.updateStats();
                     this.checkUpcomingAppointments();
@@ -178,41 +191,51 @@ class HealthAgenda {
                     this.resetForm();
                     this.showNotification('Agendamento atualizado!', 'success');
                 }).catch(err => {
-                    console.error(err);
+                    console.error('❌ Erro ao atualizar:', err);
                     this.showNotification('Erro ao atualizar agendamento. Tente novamente.', 'error');
                 });
             } else {
+                console.log('➕ Criando novo agendamento');
                 // Criar no servidor
                 window.api.fetchWithAuth('/api/agenda', {
                     method: 'POST',
                     body: JSON.stringify({ title: formData.description, details: formData.notes, start: formData.date + (formData.time ? ' ' + formData.time : ''), end: null })
                 }).then(created => {
+                    console.log('✅ Agendamento criado no servidor:', created);
                     const newAppointment = {
                         id: created.id.toString(),
                         createdAt: created.created_at || new Date().toISOString(),
                         ...formData
                     };
                     this.appointments.push(newAppointment);
+                    this.saveToStorage();
                     this.renderAppointments();
                     this.updateStats();
                     this.checkUpcomingAppointments();
                     this.updateProgressBar();
                     this.resetForm();
                     this.showNotification('Agendamento salvo!', 'success');
+                    console.log('✅ Agendamento adicionado à lista local');
                 }).catch(err => {
-                    console.error(err);
-                    this.showNotification('Erro ao salvar no servidor. Salvando localmente.', 'error');
+                    console.error('❌ Erro ao criar no servidor:', err);
+                    this.showNotification('Erro ao salvar no servidor. Salvando localmente.', 'warning');
                     // fallback local
                     const newAppointment = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...formData };
                     this.appointments.push(newAppointment);
                     this.saveToStorage();
                     this.renderAppointments();
+                    this.updateStats();
+                    this.checkUpcomingAppointments();
+                    this.updateProgressBar();
+                    this.resetForm();
+                    this.showNotification('Agendamento salvo localmente!', 'success');
                 });
             }
         } else {
+            console.log('💾 Salvando localmente (API não disponível)');
             // fallback local
             if (this.editingId) {
-                const index = this.appointments.findIndex(a => a.id === this.editingId);
+                const index = this.appointments.findIndex(a => a.id === this.editingId || a.id.toString() === this.editingId.toString());
                 if (index !== -1) {
                     this.appointments[index] = { ...this.appointments[index], ...formData };
                 }
@@ -227,6 +250,7 @@ class HealthAgenda {
             this.updateProgressBar();
             this.resetForm();
             this.showNotification(this.editingId ? 'Agendamento atualizado!' : 'Agendamento salvo!', 'success');
+            console.log('✅ Agendamento salvo localmente');
         }
     }
 
@@ -299,73 +323,107 @@ class HealthAgenda {
 
     // Excluir agendamento
     deleteAppointment(id) {
+        console.log('🗑️ Excluindo agendamento:', id);
+        console.log('🔍 Tipo do ID:', typeof id);
+        
+        // Fechar modal primeiro
+        const modalElement = document.getElementById('confirmModal');
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        
         if (window.api && window.api.fetchWithAuth) {
-            window.api.fetchWithAuth(`/api/agenda/${id}`, { method: 'DELETE' }).then(() => {
-                this.appointments = this.appointments.filter(a => a.id !== id);
-                this.renderAppointments();
-                this.updateStats();
-                this.checkUpcomingAppointments();
-                this.updateProgressBar();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
-                if (modal) modal.hide();
-                this.showNotification('Agendamento excluído!', 'success');
-            }).catch(err => {
-                console.error(err);
-                this.showNotification('Erro ao excluir no servidor. Tente novamente.', 'error');
-            });
+            console.log('📡 Enviando requisição DELETE para:', `/api/agenda/${id}`);
+            window.api.fetchWithAuth(`/api/agenda/${id}`, { method: 'DELETE' })
+                .then(response => {
+                    console.log('✅ Resposta do servidor:', response);
+                    this.appointments = this.appointments.filter(a => a.id !== id && a.id.toString() !== id.toString());
+                    this.saveToStorage();
+                    this.renderAppointments();
+                    this.updateStats();
+                    this.checkUpcomingAppointments();
+                    this.updateProgressBar();
+                    this.showNotification('Agendamento excluído!', 'success');
+                    console.log('✅ Agendamento excluído com sucesso');
+                })
+                .catch(err => {
+                    console.error('❌ Erro completo:', err);
+                    console.error('❌ Mensagem:', err.message);
+                    console.error('❌ Stack:', err.stack);
+                    
+                    // Tentar excluir localmente como fallback
+                    this.appointments = this.appointments.filter(a => a.id !== id && a.id.toString() !== id.toString());
+                    this.saveToStorage();
+                    this.renderAppointments();
+                    this.updateStats();
+                    this.checkUpcomingAppointments();
+                    this.updateProgressBar();
+                    this.showNotification('Agendamento excluído localmente (erro no servidor)', 'warning');
+                });
         } else {
-            this.appointments = this.appointments.filter(a => a.id !== id);
+            this.appointments = this.appointments.filter(a => a.id !== id && a.id.toString() !== id.toString());
             this.saveToStorage();
             this.renderAppointments();
             this.updateStats();
             this.checkUpcomingAppointments();
             this.updateProgressBar();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
-            if (modal) modal.hide();
             this.showNotification('Agendamento excluído!', 'success');
+            console.log('✅ Agendamento excluído localmente');
         }
     }
 
-    // Marcar como concluído
+    // Marcar como concluído (agora exclui automaticamente)
     toggleCompleted(id) {
-        const appointment = this.appointments.find(a => a.id === id);
-        if (appointment) {
-            // Toggle locally first
-            appointment.completed = !appointment.completed;
-
-            // If API available, persist to server
-            if (window.api && window.api.fetchWithAuth) {
-                window.api.fetchWithAuth(`/api/agenda/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ completed: appointment.completed })
-                }).then(updated => {
-                    // Update local entry with server response (to keep consistency)
-                    const idx = this.appointments.findIndex(a => a.id === updated.id.toString());
-                    if (idx !== -1) this.appointments[idx] = { ...this.appointments[idx], ...{
-                        completed: !!updated.completed,
-                        title: updated.title || this.appointments[idx].title,
-                        details: updated.details || this.appointments[idx].notes,
-                        start: updated.start || this.appointments[idx].date
-                    } };
+        const appointment = this.appointments.find(a => a.id === id || a.id.toString() === id.toString());
+        if (!appointment) {
+            console.error('❌ Agendamento não encontrado:', id);
+            return;
+        }
+        
+        console.log('✅ Marcando como concluído e excluindo:', id);
+        console.log('🔍 Tipo do ID:', typeof id);
+        
+        // Agora ao marcar como concluído, excluímos automaticamente
+        if (window.api && window.api.fetchWithAuth) {
+            console.log('📡 Enviando requisição DELETE para:', `/api/agenda/${id}`);
+            // Excluir do servidor
+            window.api.fetchWithAuth(`/api/agenda/${id}`, { method: 'DELETE' })
+                .then(response => {
+                    console.log('✅ Resposta do servidor:', response);
+                    this.appointments = this.appointments.filter(a => a.id !== id && a.id.toString() !== id.toString());
                     this.saveToStorage();
                     this.renderAppointments();
                     this.updateStats();
+                    this.checkUpcomingAppointments();
                     this.updateProgressBar();
-                }).catch(err => {
-                    console.error('Erro ao atualizar completed no servidor', err);
-                    // Fallback: keep change locally
+                    this.showNotification('Agendamento concluído e removido!', 'success');
+                    console.log('✅ Agendamento concluído e excluído do servidor');
+                })
+                .catch(err => {
+                    console.error('❌ Erro completo ao excluir do servidor:', err);
+                    console.error('❌ Mensagem:', err.message);
+                    // Fallback: excluir localmente
+                    this.appointments = this.appointments.filter(a => a.id !== id && a.id.toString() !== id.toString());
                     this.saveToStorage();
                     this.renderAppointments();
                     this.updateStats();
+                    this.checkUpcomingAppointments();
                     this.updateProgressBar();
+                    this.showNotification('Agendamento concluído e removido localmente!', 'warning');
                 });
-            } else {
-                // No API: persist locally
-                this.saveToStorage();
-                this.renderAppointments();
-                this.updateStats();
-                this.updateProgressBar();
-            }
+        } else {
+            // Excluir localmente
+            this.appointments = this.appointments.filter(a => a.id !== id && a.id.toString() !== id.toString());
+            this.saveToStorage();
+            this.renderAppointments();
+            this.updateStats();
+            this.checkUpcomingAppointments();
+            this.updateProgressBar();
+            this.showNotification('Agendamento concluído e removido!', 'success');
+            console.log('✅ Agendamento concluído e excluído localmente');
         }
     }
 
@@ -493,12 +551,11 @@ class HealthAgenda {
                             <li><a class="dropdown-item" href="#" onclick="window.agenda.editAppointment('${appointment.id}')">
                                 <i class="bi bi-pencil me-2"></i>Editar
                             </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="window.agenda.toggleCompleted('${appointment.id}')">
-                                <i class="bi bi-${appointment.completed ? 'x' : 'check'}-circle me-2"></i>
-                                ${appointment.completed ? 'Marcar como Pendente' : 'Marcar como Concluído'}
+                            <li><a class="dropdown-item text-success" href="#" onclick="window.agenda.toggleCompleted('${appointment.id}'); return false;">
+                                <i class="bi bi-check-circle me-2"></i>Concluir e Remover
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="window.agenda.editingId = '${appointment.id}'">
+                            <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="window.agenda.editingId = '${appointment.id}'; return false;">
                                 <i class="bi bi-trash me-2"></i>Excluir
                             </a></li>
                         </ul>
@@ -609,6 +666,9 @@ class HealthAgenda {
 
     // BARRA DE PROGRESSO SIMPLIFICADA - APENAS UMA
     updateProgressBar() {
+        console.log('🔄 Atualizando barra de progresso...');
+        console.log('📊 Total de agendamentos:', this.appointments.length);
+        
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -621,31 +681,52 @@ class HealthAgenda {
             })
             .sort((a, b) => this.parseLocalDate(a.date) - this.parseLocalDate(b.date));
         
+        console.log('📅 Agendamentos futuros:', upcomingAppointments.length);
+        
         // Se não existir o container, criar um
         if (!document.getElementById('progress-container')) {
+            console.log('⚠️ Container não encontrado, criando...');
             this.createProgressBar();
         }
         
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
         const progressDays = document.getElementById('progress-days');
+        const progressContainer = document.getElementById('progress-container');
+        
+        if (!progressFill || !progressText || !progressDays) {
+            console.error('❌ Elementos da barra de progresso não encontrados!');
+            console.log('progressFill:', progressFill);
+            console.log('progressText:', progressText);
+            console.log('progressDays:', progressDays);
+            return;
+        }
+        
+        // Garantir que o container esteja visível
+        if (progressContainer) {
+            progressContainer.style.display = 'block';
+        }
         
         if (upcomingAppointments.length === 0) {
-            if (progressFill) {
-                progressFill.style.width = '0%';
-                progressFill.style.background = 'linear-gradient(45deg, #28a745, #48c78e)';
-            }
-            if (progressText) progressText.textContent = 'Nenhum agendamento futuro';
-            if (progressDays) progressDays.textContent = '';
+            console.log('ℹ️ Nenhum agendamento futuro');
+            progressFill.style.width = '0%';
+            progressFill.style.background = 'linear-gradient(45deg, #28a745, #48c78e)';
+            progressText.textContent = 'Nenhum agendamento futuro';
+            progressDays.textContent = '';
             return;
         }
         
         const nextAppointment = upcomingAppointments[0];
         const daysUntil = this.getDaysDifference(nextAppointment.date);
         
+        console.log('🎯 Próximo agendamento:', nextAppointment.description);
+        console.log('📆 Dias até o agendamento:', daysUntil);
+        
         // Calcular progresso (0-100%) baseado na proximidade (máximo 30 dias)
         const maxDays = 30;
         const progress = Math.max(0, Math.min(100, ((maxDays - daysUntil) / maxDays) * 100));
+        
+        console.log('📈 Progresso calculado:', progress + '%');
         
         // Atualizar cor baseada na urgência ANTES de definir a largura
         let bgColor = 'linear-gradient(45deg, #28a745, #48c78e)';
@@ -657,32 +738,61 @@ class HealthAgenda {
             bgColor = 'linear-gradient(45deg, #17a2b8, #39c0d3)';
         }
         
-        // Atualizar display
-        if (progressFill) {
-            progressFill.style.background = bgColor;
-            progressFill.style.width = `${progress}%`;
+        // Atualizar display com animação
+        progressFill.style.background = bgColor;
+        // Forçar reflow para garantir animação
+        void progressFill.offsetWidth;
+        progressFill.style.width = `${progress}%`;
+        
+        progressText.textContent = `Próximo: ${nextAppointment.description}`;
+        
+        if (daysUntil === 0) {
+            progressDays.textContent = 'Hoje!';
+            progressDays.style.color = '#dc3545';
+            progressDays.style.fontWeight = 'bold';
+        } else if (daysUntil === 1) {
+            progressDays.textContent = 'Amanhã';
+            progressDays.style.color = '#ffc107';
+            progressDays.style.fontWeight = 'bold';
+        } else {
+            progressDays.textContent = `${daysUntil} dias`;
+            progressDays.style.color = '';
+            progressDays.style.fontWeight = 'bold';
         }
-        if (progressText) progressText.textContent = `Próximo: ${nextAppointment.description}`;
-        if (progressDays) progressDays.textContent = daysUntil === 0 ? 'Hoje' : `${daysUntil} dias`;
+        
+        console.log('✅ Barra de progresso atualizada com sucesso!');
     }
 
     // Criar barra de progresso no DOM
     createProgressBar() {
+        console.log('🔨 Tentando criar barra de progresso...');
+        
+        // Verificar se já existe para evitar duplicação
+        if (document.getElementById('progress-container')) {
+            console.log('ℹ️ Barra de progresso já existe');
+            return;
+        }
+        
         const header = document.querySelector('header.text-center');
-        if (!header) return;
+        if (!header) {
+            console.error('❌ Header não encontrado!');
+            return;
+        }
+        
+        console.log('✅ Header encontrado, criando barra...');
         
         const progressHtml = `
-            <div class="row justify-content-center mb-4">
+            <div class="row justify-content-center mb-4" style="margin-top: 2rem;">
                 <div class="col-lg-10">
-                    <div class="neo-card p-4" id="progress-container">
+                    <div class="neo-card p-4" id="progress-container" style="display: block;">
                         <h4 class="h6 mb-3 text-center">
                             <i class="bi bi-clock text-primary me-2"></i>Progresso para Próximo Agendamento
                         </h4>
                         <div class="progress-bar mb-3">
-                            <div class="progress-fill" id="progress-fill" style="width: 0%; background: linear-gradient(45deg, #28a745, #48c78e);"></div>
+                            <div class="progress-fill" id="progress-fill" style="width: 0%; background: linear-gradient(45deg, #28a745, #48c78e); transition: width 0.5s ease;"></div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <small id="progress-text" class="text-muted">Nenhum agendamento futuro</small>
+                            <small id="progress-text" class="text-muted">Carregando...</small>
                             <small id="progress-days" class="text-muted fw-bold"></small>
                         </div>
                     </div>
@@ -691,6 +801,11 @@ class HealthAgenda {
         `;
         
         header.insertAdjacentHTML('afterend', progressHtml);
+        console.log('✅ Barra de progresso criada com sucesso!');
+        
+        // Verificar se foi criada
+        const container = document.getElementById('progress-container');
+        console.log('📦 Container após criação:', container ? 'Encontrado' : 'Não encontrado');
     }
 
     // Utilitários

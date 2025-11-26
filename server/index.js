@@ -38,7 +38,8 @@ const PORT = process.env.PORT || 4000;
     res.redirect('/mvp/inicio/inicio.html');
   });
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on http://localhost:${PORT}`);
+    console.log(`Network access: http://192.168.1.106:${PORT}`);
   });
 })();

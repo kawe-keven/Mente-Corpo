@@ -100,20 +100,54 @@ body {
 
 /* Progress Bars */
 .progress-bar {
-    height: 15px;
-    border-radius: 10px;
-    background: var(--bg-color);
+    height: 20px;
+    border-radius: 12px;
+    background: #e0e5ec;
     box-shadow: inset 5px 5px 10px var(--shadow-dark), 
                 inset -5px -5px 10px var(--shadow-light);
     overflow: hidden;
+    position: relative;
+    width: 100%;
 }
 
 .progress-fill {
     height: 100%;
-    background: var(--primary-color);
-    border-radius: 10px;
-    transition: width 0.5s ease;
+    background: linear-gradient(45deg, #28a745, #48c78e);
+    border-radius: 12px;
+    transition: width 0.5s ease, background 0.3s ease;
     box-shadow: 2px 2px 5px rgba(0, 123, 255, 0.3);
+    position: relative;
+    min-width: 0;
+    display: block;
+}
+
+/* Estilos específicos para o container de progresso */
+#progress-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: opacity 0.3s ease;
+}
+
+#progress-text,
+#progress-days {
+    font-size: 0.875rem;
+    display: inline-block;
+    color: var(--dark-color);
+}
+
+#progress-days {
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: rgba(0, 123, 255, 0.1);
+}
+
+/* Animação da barra de progresso */
+@keyframes progressAnimation {
+    from {
+        width: 0;
+    }
 }
 
 /* Stat Cards */
@@ -629,6 +663,22 @@ html {
 
 [data-theme="dark"] .theme-toggle i {
     color: #ffd43b;
+}
+
+/* Estilos da barra de progresso no modo escuro */
+[data-theme="dark"] .progress-bar {
+    background: #262626;
+    box-shadow: inset 5px 5px 10px #0d0d0d, 
+                inset -5px -5px 10px #333333;
+}
+
+[data-theme="dark"] #progress-text,
+[data-theme="dark"] #progress-days {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] #progress-container {
+    background: var(--bg-color);
 }
 
 /* Transição suave para a mudança de tema */
